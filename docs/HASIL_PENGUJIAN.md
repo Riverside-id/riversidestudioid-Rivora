@@ -29,7 +29,11 @@ Catatan jujur per lingkungan. "Lulus di PGlite" **bukan** berarti lulus di Supab
 |---|---|
 | Env **Preview** (`RIVORA_DATA_SOURCE=supabase`, URL + publishable key Supabase) | ✅ diisi; Preview `rivora-hcystix4p` dideploy ulang & Ready (dilindungi Vercel Authentication) |
 | Deployment production `rivora-fi78zx991` (13.26 WIB, dipromosikan dari Preview Fase B lewat dashboard) | ⚠️ kode Fase B **tanpa env Production** → mode demo ditolak → "Halaman belum bisa dimuat" |
-| Env **Production** | ⏳ belum diisi — butuh izin pemilik (ditolak pengaman otomatis saat dicoba) |
+| Env **Production** (`RIVORA_DATA_SOURCE=supabase`, URL + publishable key, `NEXT_PUBLIC_SITE_URL`) | ✅ diisi dengan izin pemilik |
+| Redeploy production `rivora-5d783nzju` → `https://rivora-rust.vercel.app` | ✅ Ready |
+| `/`, `/login`, `/register`, `/forgot-password`, `/reset-password` | ✅ 200, desain Fase A, tanpa banner "Data demo" |
+| `/dashboard`, `/jadwal`, `/onboarding`, `/pengaturan` tanpa login | ✅ 307 → `/login` |
+| Login/daftar sungguhan di production | ⏳ belum diuji — perlu Auth URL Configuration di Supabase + akun guru |
 
 ### Hosting Vercel (production awal, commit `34d8918` / Fase A)
 

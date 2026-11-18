@@ -222,9 +222,9 @@ Keputusan pemilik (18 Nov 2026): hosting memakai **Vercel** (menggantikan rencan
 | Repo | `Riverside-id/riversidestudioid-Rivora` (terhubung; push ke `main` = deploy production) |
 | Deploy preview | otomatis untuk branch lain/PR, dilindungi *Vercel Authentication* (hanya anggota tim) |
 
-Status 18 Nov 2026: env **Preview** sudah diisi (mode supabase). Production menjalankan kode Fase B (dipromosikan
-lewat dashboard) tetapi env **Production** belum diisi, sehingga halaman aplikasi terkunci pengaman data demo
-("Halaman belum bisa dimuat") — tidak ada angka contoh di domain publik.
+Status 18 Nov 2026: env **Preview** dan **Production** sudah diisi (mode supabase). Production menjalankan kode
+Fase B (deployment dipromosikan lewat dashboard, belum lewat merge ke `main`): halaman aplikasi meminta login.
+Selama PR Fase B belum di-merge, push ke `main` akan mengembalikan production ke Fase A.
 
 Variabel environment (Vercel → Project → Settings → Environment Variables):
 
