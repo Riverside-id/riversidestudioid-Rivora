@@ -13,8 +13,23 @@ Migrasi: `supabase/migrations/`. Test: `tests/db/schema.test.ts` (PGlite & Supab
 | `semesters` | nomor 1/2, tanggal, `midterm_date` (penanda UTS/PTS, boleh kosong) | tidak |
 | `teaching_classes` | tingkat 1–6, rombel `A`–`ZZ`, mata pelajaran, `archived_at` | tidak (arsip) |
 | `weekly_schedules` | hari ISO 1–7, jam mulai/selesai, masa berlaku | ya (milik sendiri) |
+| `teaching_materials` | judul, topik, tingkat (opsional), jenis, `file_path`/`file_name`/`file_size`, `archived_at` | tidak (arsip) |
 
-Belum dibuat (Fase C): `teaching_materials` + Storage, `class_lesson_plans`, `meeting_records`, `audit_events`.
+Belum dibuat (Fase C): `class_lesson_plans`, `meeting_records`, `audit_events`.
+
+## Bank Materi & Storage (migration `20261118200000_fase_c_materi`)
+
+- Jenis file: PDF, Word (DOC/DOCX), PowerPoint (PPT/PPTX) — PRD F05 + permintaan pemilik (Word). Maks. 10 MB.
+- Bucket **privat** `materi`: `file_size_limit` 10 MB + daftar tipe MIME. Path `<owner_id>/<uuid>.<ekstensi>`;
+  nama asli disimpan di `file_name`. Constraint memastikan path berada di folder pemilik dan ekstensi = jenis.
+- Policy Storage: guru hanya membaca/mengunggah di foldernya; tidak ada timpa (UPDATE); hapus hanya untuk file
+  miliknya yang **belum dirujuk** materi (membersihkan unggahan gagal). File yang dipakai materi tidak bisa dihapus.
+- Unggah: Server Action memeriksa jenis/ukuran → signed upload URL sekali pakai → browser mengirim file langsung
+  ke Storage (tidak lewat server, bebas batas 4,5 MB Vercel) → Server Action membaca ukuran/tipe dari Storage lalu
+  menyimpan baris materi; bila gagal, file dibersihkan.
+- Buka: `/materi/[id]/berkas` memeriksa sesi & kepemilikan lalu mengalihkan ke signed URL 2 menit
+  (PDF dibuka di browser, Word/PowerPoint diunduh dengan nama asli).
+- Hapus = arsip (`archived_at`): materi hilang dari Bank Materi, file tetap ada untuk rujukan arsip.
 
 ## Lapisan proteksi
 

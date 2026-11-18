@@ -18,7 +18,7 @@ materi, dan progres pelaksanaan pembelajaran per kelas, per semester, per tahun 
 |---|---|
 | A — Foundation & UI | Selesai, di `main` |
 | B — Auth & Data | Di `feature/fase-b` (PR ke `main`); migration **sudah diterapkan** ke Supabase Cloud (18 Nov 2026) |
-| C — Teaching Core | Belum |
+| C — Teaching Core | Sebagian di `feature/fase-c-materi`: Bank Materi unggah PDF/Word/PowerPoint (migration **belum diterapkan** ke Cloud) |
 | D — Periode & Arsip | Belum |
 | E — QA & Staging | Belum |
 
@@ -74,8 +74,9 @@ Project: `efawovyrzkvgdphgkuuj` (`https://efawovyrzkvgdphgkuuj.supabase.co`).
    supabase db push
    ```
 
-   **Jalur B — SQL Editor** (tanpa CLI): `npm run db:bundle` → tempel isi `supabase/cloud/fase_b_sql_editor.sql`
-   ke Dashboard → SQL Editor → Run. Satu transaksi, riwayat migration ikut dicatat, dan hasil cek tampil di Results.
+   **Jalur B — SQL Editor** (tanpa CLI): `npm run db:bundle` → tempel isi `supabase/cloud/sql_editor_bundle.sql`
+   ke Dashboard → SQL Editor → Run. Untuk project yang sudah berjalan, bundel hanya migration baru, mis.
+   `npm run db:bundle -- --since 20261118200000` (Bank Materi). Satu transaksi, riwayat migration ikut dicatat, dan hasil cek tampil di Results.
    Jika muncul `already exists`, migration sudah pernah diterapkan: jangan ulangi.
 
    Cek kondisi kapan saja (hanya membaca): jalankan `supabase/checks/cek_kondisi.sql` di SQL Editor.
@@ -253,7 +254,7 @@ vercel ls rivora --scope anugrahniezra
 - `src/lib/supabase/database.types.ts` ditulis manual; regenerasi dengan `npm run db:types` setelah Supabase lokal jalan.
 - Email produksi: layanan email bawaan Supabase hanya untuk uji (kuota kecil, terbatas anggota tim) — perlu SMTP
   sendiri sebelum pilot dengan guru.
-- Belum ada: materi/Storage, rencana per kelas, catatan Selesai/Tunda (Fase C); pergantian semester aktif,
+- Belum ada: tautan video/catatan teks & pencarian materi, rencana per kelas, catatan Selesai/Tunda (Fase C); pergantian semester aktif,
   arsip tahun, salin tahun baru, laporan (Fase D); hapus akun mandiri (butuh fungsi admin — direncanakan).
 - Draf onboarding tersimpan di `localStorage` perangkat sampai langkah terakhir dikirim.
 - `/jadwal/[id]` yang tidak ada menampilkan halaman "tidak ditemukan", tetapi status HTTP tetap 200

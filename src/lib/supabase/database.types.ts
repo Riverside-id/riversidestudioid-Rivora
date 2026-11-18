@@ -114,6 +114,44 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["teaching_classes"]["Insert"]>;
         Relationships: [];
       };
+      teaching_materials: {
+        Row: {
+          id: string;
+          owner_id: string;
+          title: string;
+          description: string | null;
+          topic: string | null;
+          grade_level: number | null;
+          tags: string[];
+          kind: string;
+          file_path: string | null;
+          file_name: string | null;
+          file_size: number | null;
+          mime_type: string | null;
+          external_url: string | null;
+          archived_at: string | null;
+        } & Timestamps;
+        Insert: {
+          id?: string;
+          owner_id?: string;
+          title: string;
+          description?: string | null;
+          topic?: string | null;
+          grade_level?: number | null;
+          tags?: string[];
+          kind: string;
+          file_path?: string | null;
+          file_name?: string | null;
+          file_size?: number | null;
+          mime_type?: string | null;
+          external_url?: string | null;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["teaching_materials"]["Insert"]>;
+        Relationships: [];
+      };
       weekly_schedules: {
         Row: {
           id: string;

@@ -74,7 +74,10 @@ export interface WeeklySchedule {
   effectiveUntil: ISODate | null;
 }
 
-export type MaterialKind = "pdf" | "ppt" | "pptx" | "video" | "link" | "note";
+export type MaterialKind = "pdf" | "doc" | "docx" | "ppt" | "pptx" | "video" | "link" | "note";
+
+/** Jenis materi berupa file yang diunggah ke Storage. */
+export type MaterialFileKind = Extract<MaterialKind, "pdf" | "doc" | "docx" | "ppt" | "pptx">;
 
 export interface TeachingMaterial {
   id: string;
@@ -87,6 +90,10 @@ export interface TeachingMaterial {
   kind: MaterialKind;
   /** Path di Supabase Storage (bucket privat). */
   filePath: string | null;
+  /** Nama file asli saat diunggah (untuk unduhan). */
+  fileName: string | null;
+  /** Ukuran file dalam byte. */
+  fileSize: number | null;
   externalUrl: string | null;
   createdAt: string;
 }

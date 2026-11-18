@@ -166,7 +166,7 @@ function mat(
   createdAt: string,
   description: string | null = null,
 ): TeachingMaterial {
-  const isFile = kind === "pdf" || kind === "ppt" || kind === "pptx";
+  const isFile = kind === "pdf" || kind === "doc" || kind === "docx" || kind === "ppt" || kind === "pptx";
   return {
     id: `demo-mat-${slug}`,
     ownerId: DEMO_OWNER_ID,
@@ -177,6 +177,8 @@ function mat(
     tags: [`kelas-${grade}`, topic.toLowerCase()],
     kind,
     filePath: isFile ? `demo/${slug}.${kind}` : null,
+    fileName: isFile ? `${title}.${kind}` : null,
+    fileSize: isFile ? 850_000 + title.length * 12_000 : null,
     externalUrl: kind === "video" || kind === "link" ? `https://example.com/demo/${slug}` : null,
     createdAt,
   };
