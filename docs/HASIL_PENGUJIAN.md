@@ -11,7 +11,7 @@ Catatan jujur per lingkungan. "Lulus di PGlite" **bukan** berarti lulus di Supab
 | Tabel `teaching_materials` + RLS dua guru + policy Storage (folder sendiri, tidak lintas akun, file terpakai tak bisa dihapus) + bucket privat 5 tipe (tanpa batas ukuran sejak migration `20261118210000`) | **PGlite** + tiruan skema `storage` | `tests/db/materials.test.ts` | ✅ 10 skenario |
 | Bundel SQL Editor `--since` (hanya migration baru untuk Cloud yang sudah berisi Fase B) | PGlite | `tests/db/sql-editor-bundle.test.ts` | ✅ |
 | Transisi Cloud: materi batas 10 MB → tanpa batas (`--since 20261118210000`) | PGlite | `tests/db/sql-editor-bundle.test.ts` | ✅ |
-| **Migration `20261118210000_materi_tanpa_batas_ukuran`** | **Supabase Cloud** | SQL Editor | ⏳ menunggu persetujuan SQL |
+| **Migration `20261118210000_materi_tanpa_batas_ukuran`** (disetujui pemilik) | **Supabase Cloud** | SQL Editor + `supabase/checks/cek_kondisi.sql` | ✅ 18 Nov 2026: bucket `materi` privat tanpa batas sendiri, 5 tipe file, 3 policy; 6 versi riwayat migration; 20 policy public; anon tanpa hak |
 | Tampilan Materi (kartu, Unduh/Buka PDF, form unggah desktop & ponsel, pesan mode demo) | lokal, browser | manual | ✅ desain Fase A dipertahankan |
 | **Storage asli**: unggah via signed URL, buka via signed URL, guru B & anon ditolak, bucket tolak tipe lain, file 11 MB diterima, arsip menjaga file | **Supabase Cloud** | `tests/integration/supabase-storage.test.ts` | ⏳ **belum** — menunggu persetujuan migration + secret key |
 
