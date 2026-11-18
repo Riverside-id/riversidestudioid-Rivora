@@ -51,6 +51,8 @@ export interface RivoraMutations {
     gradeLevel: GradeLevel | null;
   }): Promise<void>;
   archiveMaterial(materialId: string): Promise<void>;
+  createLinkMaterial(input: MaterialMeta & { kind: "video" | "link"; url: string }): Promise<void>;
+  createNoteMaterial(input: MaterialMeta & { body: string }): Promise<void>;
   restoreMaterial(materialId: string): Promise<void>;
   restoreClass(classId: string): Promise<void>;
 
@@ -111,6 +113,13 @@ export interface NewAcademicYearPayload {
 }
 
 export type MeetingTarget = { kind: "occurrence"; scheduleId: string; date: ISODate } | { kind: "record"; recordId: string };
+
+export interface MaterialMeta {
+  title: string;
+  description: string | null;
+  topic: string | null;
+  gradeLevel: GradeLevel | null;
+}
 
 export interface MaterialUploadTicket {
   path: string;
@@ -245,6 +254,30 @@ export function createSupabaseMutations(client: RivoraSupabaseClient, userId: st
         await bucket.remove([path]);
         throw toDataError(error);
       }
+    },
+
+    async createLinkMaterial({ kind, url, title, description, topic, gradeLevel }) {
+      const { error } = await client.from("teaching_materials").insert({
+        kind,
+        external_url: url,
+        title,
+        description,
+        topic,
+        grade_level: gradeLevel,
+      });
+      if (error) throw toDataError(error);
+    },
+
+    async createNoteMaterial({ body, title, description, topic, gradeLevel }) {
+      const { error } = await client.from("teaching_materials").insert({
+        kind: "note",
+        note_body: body,
+        title,
+        description,
+        topic,
+        grade_level: gradeLevel,
+      });
+      if (error) throw toDataError(error);
     },
 
     async archiveMaterial(materialId) {

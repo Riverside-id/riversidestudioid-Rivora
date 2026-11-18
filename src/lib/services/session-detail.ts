@@ -27,7 +27,8 @@ export interface SessionMaterial {
   id: string;
   title: string;
   kind: MaterialKind;
-  hasFile: boolean;
+  filePath: string | null;
+  externalUrl: string | null;
 }
 
 export interface LinkedSession {
@@ -92,7 +93,9 @@ export async function getSessionPageData(
       completedSessions: done.get(p.id) ?? 0,
       midtermSegment: p.midtermSegment,
     })),
-    material: found ? { id: found.id, title: found.title, kind: found.kind, hasFile: Boolean(found.filePath) } : null,
+    material: found
+      ? { id: found.id, title: found.title, kind: found.kind, filePath: found.filePath, externalUrl: found.externalUrl }
+      : null,
     replacement: record ? linked(data.meetings.find((m) => m.replacementForId === record.id)) : null,
     replacementFor: record?.replacementForId ? linked(data.meetings.find((m) => m.id === record.replacementForId)) : null,
     events: record ? await repo.listMeetingStatusEvents([record.id]) : [],

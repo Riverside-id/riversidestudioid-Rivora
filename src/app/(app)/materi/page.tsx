@@ -1,10 +1,11 @@
-import { Archive, BookOpen, Download, ExternalLink, FileText, Link2, Presentation, StickyNote, Video } from "lucide-react";
+import { Archive, BookOpen, FileText, Link2, Presentation, StickyNote, Video } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ArchivedMaterials, type ArchivedMaterialItem } from "@/components/arsip/archived-materials";
 import { InlineAddPanel } from "@/components/jadwal/inline-add-panel";
 import { PageHeader } from "@/components/layout/page-header";
-import { UploadMaterialForm } from "@/components/materi/upload-material-form";
+import { AddMaterialPanel } from "@/components/materi/add-material-panel";
+import { MaterialOpenLink } from "@/components/materi/material-open-link";
 import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ConfirmAction } from "@/components/ui/confirm-action";
@@ -14,7 +15,8 @@ import { PhaseNote } from "@/components/ui/phase-note";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { MATERIAL_KIND_LABEL } from "@/lib/domain/labels";
 import type { MaterialKind } from "@/lib/domain/types";
-import { formatFileSize, isMaterialFileKind, opensInBrowser } from "@/lib/materials/file-rules";
+import { formatFileSize } from "@/lib/materials/file-rules";
+import { linkHost } from "@/lib/materials/link-rules";
 import { getRequestContext } from "@/lib/server/request-context";
 import { getMaterialsOverview } from "@/lib/services/materials";
 import { readSupabaseEnv } from "@/lib/supabase/env";
@@ -60,7 +62,8 @@ async function MateriContent({ searchParams }: { searchParams: PageProps<"/mater
     topic: m.topic,
     gradeLevel: m.gradeLevel,
     fileSize: m.fileSize,
-    hasFile: Boolean(m.filePath),
+    filePath: m.filePath,
+    externalUrl: m.externalUrl,
     archivedOn: m.archivedAt ? ARCHIVED_ON.format(new Date(m.archivedAt)) : "",
   }));
   const supabaseEnv = isDemo ? null : readSupabaseEnv();
@@ -78,21 +81,19 @@ async function MateriContent({ searchParams }: { searchParams: PageProps<"/mater
         <PhaseNote>
           {isDemo
             ? "Mode demo: data contoh tidak bisa diubah. Hubungkan Supabase untuk mengunggah materi."
-            : "Unggah PDF, Word (DOC/DOCX), atau PowerPoint (PPT/PPTX). File hanya bisa dibuka oleh Anda. Tautan video, catatan, dan rencana per kelas dibangun berikutnya di Fase C."}
+            : "Tambah file PDF/Word/PowerPoint, tautan video atau referensi, atau catatan teks. Semua materi hanya bisa dibuka oleh Anda."}
         </PhaseNote>
 
         {notice ? <FormMessage state={{ status: "error", message: notice }} /> : null}
 
         <InlineAddPanel label="Tambah Materi" disabledReason={canEdit ? undefined : "Mode demo: unggah materi tidak disimpan."}>
-          {supabaseEnv ? <UploadMaterialForm supabaseUrl={supabaseEnv.url} publishableKey={supabaseEnv.publishableKey} /> : null}
+          {supabaseEnv ? <AddMaterialPanel supabaseUrl={supabaseEnv.url} publishableKey={supabaseEnv.publishableKey} /> : null}
         </InlineAddPanel>
 
         {materials.length > 0 ? (
           <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {materials.map((m) => {
               const Icon = KIND_ICON[m.kind];
-              const isFile = isMaterialFileKind(m.kind) && Boolean(m.filePath);
-              const inBrowser = isMaterialFileKind(m.kind) && opensInBrowser(m.kind);
               const meta = [
                 MATERIAL_KIND_LABEL[m.kind],
                 m.fileSize ? formatFileSize(m.fileSize) : null,
@@ -127,18 +128,9 @@ async function MateriContent({ searchParams }: { searchParams: PageProps<"/mater
                       )}
                     </p>
 
-                    {isFile ? (
-                      <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
-                        <a
-                          href={`/materi/${m.id}/berkas`}
-                          target={inBrowser ? "_blank" : undefined}
-                          rel={inBrowser ? "noopener noreferrer" : undefined}
-                          aria-label={`${inBrowser ? "Buka" : "Unduh"} materi ${m.title}`}
-                          className={buttonClass("secondary", "sm")}
-                        >
-                          {inBrowser ? <ExternalLink aria-hidden className="size-4" /> : <Download aria-hidden className="size-4" />}
-                          {inBrowser ? "Buka PDF" : "Unduh"}
-                        </a>
+                    {m.externalUrl ? <p className="mt-1 truncate text-sm text-ink-muted">{linkHost(m.externalUrl)}</p> : null}
+                    <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
+                        <MaterialOpenLink material={m} />
                         {canEdit ? (
                           <ConfirmAction
                             trigger={
@@ -151,8 +143,8 @@ async function MateriContent({ searchParams }: { searchParams: PageProps<"/mater
                             title="Arsipkan materi ini?"
                             description={
                               <>
-                                <strong>{m.title}</strong> tidak tampil lagi di Bank Materi. File tetap tersimpan dan
-                                tetap bisa dibuka dari arsip.
+                                <strong>{m.title}</strong> tidak tampil lagi di Bank Materi. Isinya tetap tersimpan dan
+                                bisa dibuka atau dipulihkan dari bagian Materi Diarsipkan.
                               </>
                             }
                             confirmLabel="Arsipkan"
@@ -161,8 +153,7 @@ async function MateriContent({ searchParams }: { searchParams: PageProps<"/mater
                             tone="primary"
                           />
                         ) : null}
-                      </div>
-                    ) : null}
+                    </div>
                   </Card>
                 </li>
               );

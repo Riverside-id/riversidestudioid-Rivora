@@ -1,4 +1,4 @@
-import { ChartColumn, ClipboardList, Users } from "lucide-react";
+import { ChartColumn, ClipboardList, FileBarChart, Users } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ClassProgressList } from "@/components/dashboard/class-progress-list";
@@ -35,6 +35,11 @@ async function ProgresContent() {
         subtitle={`Progres pelaksanaan materi per kelas · ${semester}`}
       />
       <div className="space-y-6">
+        <div className="flex justify-end">
+          <ButtonLink href="/progres/laporan" variant="secondary" size="sm">
+            <FileBarChart aria-hidden className="size-4" /> Laporan & Ekspor
+          </ButtonLink>
+        </div>
         <Card aria-labelledby="ringkasan-progres">
           <CardHeader
             icon={ChartColumn}

@@ -1,14 +1,14 @@
 "use client";
 
-import { ArchiveRestore, Download, ExternalLink, Search } from "lucide-react";
+import { ArchiveRestore, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { restoreMaterialAction } from "@/app/(app)/materi/actions";
 import { ActionButton } from "@/components/ui/action-button";
-import { buttonClass } from "@/components/ui/button";
+import { MaterialOpenLink } from "@/components/materi/material-open-link";
 import { inputClass } from "@/components/ui/field";
 import { MATERIAL_KIND_LABEL } from "@/lib/domain/labels";
 import type { MaterialKind } from "@/lib/domain/types";
-import { formatFileSize, isMaterialFileKind, opensInBrowser } from "@/lib/materials/file-rules";
+import { formatFileSize } from "@/lib/materials/file-rules";
 import { cn } from "@/lib/utils";
 
 export interface ArchivedMaterialItem {
@@ -18,7 +18,8 @@ export interface ArchivedMaterialItem {
   topic: string | null;
   gradeLevel: number | null;
   fileSize: number | null;
-  hasFile: boolean;
+  filePath: string | null;
+  externalUrl: string | null;
   archivedOn: string;
 }
 
@@ -49,8 +50,6 @@ export function ArchivedMaterials({ items, canRestore }: { items: ArchivedMateri
       {shown.length > 0 ? (
         <ul className="space-y-2.5">
           {shown.map((m) => {
-            const kind = isMaterialFileKind(m.kind) ? m.kind : null;
-            const inBrowser = kind ? opensInBrowser(kind) : false;
             const meta = [
               MATERIAL_KIND_LABEL[m.kind],
               m.fileSize ? formatFileSize(m.fileSize) : null,
@@ -65,18 +64,7 @@ export function ArchivedMaterials({ items, canRestore }: { items: ArchivedMateri
                   <p className="text-sm text-ink-muted">{meta.join(" · ")}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  {kind && m.hasFile ? (
-                    <a
-                      href={`/materi/${m.id}/berkas`}
-                      target={inBrowser ? "_blank" : undefined}
-                      rel={inBrowser ? "noopener noreferrer" : undefined}
-                      aria-label={`${inBrowser ? "Buka" : "Unduh"} materi arsip ${m.title}`}
-                      className={buttonClass("ghost", "sm")}
-                    >
-                      {inBrowser ? <ExternalLink aria-hidden className="size-4" /> : <Download aria-hidden className="size-4" />}
-                      {inBrowser ? "Buka" : "Unduh"}
-                    </a>
-                  ) : null}
+                  <MaterialOpenLink material={m} variant="ghost" />
                   {canRestore ? (
                     <ActionButton action={restoreMaterialAction} fields={{ materialId: m.id }} label={`Pulihkan materi ${m.title}`}>
                       <ArchiveRestore aria-hidden className="size-4" /> Pulihkan

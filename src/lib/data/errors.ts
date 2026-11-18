@@ -57,6 +57,10 @@ export function dbErrorMessage(error: DbErrorLike): string {
   if (text.includes("profiles_timezone_supported")) return "Zona waktu tidak didukung.";
   if (text.includes("profiles_display_name_length")) return "Nama panggilan harus 2–40 huruf.";
   if (text.includes("teaching_materials_file_size_positive")) return "File kosong. Pilih file lain.";
+  if (text.includes("teaching_materials_url_shape") || text.includes("teaching_materials_url_length")) {
+    return "Tautan tidak valid. Gunakan alamat yang diawali https:// atau http://.";
+  }
+  if (text.includes("teaching_materials_note_shape")) return "Tulis isi catatan (maks. 20.000 karakter).";
   if (text.includes("meeting_records_plan_fk")) {
     return "Rencana ini sudah dipakai di catatan pertemuan, jadi tidak bisa dihapus. Ubah judul atau jumlah pertemuannya saja.";
   }

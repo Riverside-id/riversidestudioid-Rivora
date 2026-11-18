@@ -2,6 +2,19 @@
 
 Catatan jujur per lingkungan. "Lulus di PGlite" **bukan** berarti lulus di Supabase asli.
 
+## Tahap 3 Materi & Laporan (#16–#19) — 19 November 2026
+
+| Lapisan | Lingkungan | Perintah | Hasil |
+|---|---|---|---|
+| Tautan http(s) & catatan tersimpan; javascript:/data:, URL > 2.000, bentuk salah ditolak DB; lintas akun | **PGlite** | `tests/db/materials.test.ts` | ✅ |
+| Transisi Cloud → catatan & tautan, rollback berurutan | PGlite | `tests/db/sql-editor-bundle.test.ts` | ✅ |
+| Validasi URL (skema berbahaya, kredensial), cara membuka per jenis | lokal | `src/lib/__tests__/link-rules.test.ts` | ✅ 4 test |
+| Laporan dari repository (total konsisten, ≤ 100%, filter kelas/tanggal, semua semester), CSV BOM/`;`/CSV-injection | lokal | `src/lib/__tests__/report.test.ts` | ✅ 5 test |
+| Halaman laporan & unduh CSV (header, BOM, nama file) | lokal, dev server (data contoh) | manual + curl | ✅ |
+| Cetak/Simpan PDF | browser | manual | ⏳ belum dicoba di dialog cetak |
+| **Migration `20261119300000_materi_catatan_tautan`** | **Supabase Cloud** | SQL Editor | ⏳ menunggu persetujuan |
+| #16 unggah PDF/DOC/DOCX/PPT/PPTX asli di Cloud | **Supabase Cloud** | `tests/integration/supabase-storage.test.ts` | ⏳ menunggu secret key |
+
 ## Tahap 2 Tahun Ajaran & Arsip (#09–#15) — 19 November 2026
 
 | Lapisan | Lingkungan | Perintah | Hasil |

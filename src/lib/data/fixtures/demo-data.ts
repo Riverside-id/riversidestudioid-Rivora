@@ -180,6 +180,7 @@ function mat(
     fileName: isFile ? `${title}.${kind}` : null,
     fileSize: isFile ? 850_000 + title.length * 12_000 : null,
     externalUrl: kind === "video" || kind === "link" ? `https://example.com/demo/${slug}` : null,
+    noteBody: kind === "note" ? (description ?? `Catatan mengajar: ${title}.`) : null,
     createdAt,
     archivedAt: null,
   };

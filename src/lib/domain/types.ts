@@ -95,6 +95,8 @@ export interface TeachingMaterial {
   /** Ukuran file dalam byte. */
   fileSize: number | null;
   externalUrl: string | null;
+  /** Isi materi berupa catatan teks. */
+  noteBody: string | null;
   createdAt: string;
   /** Diisi saat materi diarsipkan (file tetap di Storage). */
   archivedAt: string | null;
