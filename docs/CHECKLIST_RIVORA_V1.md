@@ -15,14 +15,14 @@ Audit awal: 18 November 2026, `main` = `c35df4f` (Fase A, Fase B, Bank Materi un
 
 | # | Pekerjaan | Status | Catatan audit |
 |---|---|---|---|
-| 01 | Rencana materi per kelas | Sedang dikerjakan | Logika urutan & saran materi berikutnya sudah ada (data contoh); tabel `class_lesson_plans`, tambah/edit/urutkan/hapus belum ada |
-| 02 | Hubungkan materi dengan jadwal | Sedang dikerjakan | Detail sesi menampilkan topik (data contoh); tombol Buka Materi nonaktif; route buka file `/materi/[id]/berkas` sudah ada |
-| 03 | Tombol Tandai Selesai | Sedang dikerjakan | Tombol nonaktif; tabel `meeting_records` belum ada |
-| 04 | Tunda dan Batal | Sedang dikerjakan | Tombol nonaktif |
-| 05 | Catatan dan riwayat mengajar | Sedang dikerjakan | Catatan hanya ditampilkan dari data contoh; histori status belum ada |
-| 06 | Progres mengajar otomatis | Sedang dikerjakan | Rumus (selesai ÷ rencana, maks 100%, tanpa hitung ganda, "Belum ada rencana") sudah ada & teruji unit; belum memakai data Supabase |
-| 07 | Jadwal pengganti dan pengecualian | Sedang dikerjakan | Logika sesi pengganti ada di domain; tabel & UI belum |
-| 08 | Edit kelas | Sedang dikerjakan | Tambah & arsip kelas sudah ada (Fase B); edit tingkat/rombel belum |
+| 01 | Rencana materi per kelas | Sudah dibuat, belum teruji | `/progres/[kelas]`: tambah/ubah/urutkan/hapus topik, jumlah pertemuan, penanda UTS/PTS, file Bank Materi, materi berikutnya. Hapus ditolak bila sudah ada catatan. PGlite ✅; Cloud menunggu migration |
+| 02 | Hubungkan materi dengan jadwal | Sudah dibuat, belum teruji | Detail sesi: topik rencana (saran otomatis, bisa diganti saat Tandai Selesai), Buka Materi (PDF di browser) / Unduh (Word, PowerPoint); satu file untuk banyak kelas |
+| 03 | Tombol Tandai Selesai | Sudah dibuat, belum teruji | Simpan status, tanggal pelaksanaan, waktu pencatatan (server), topik, ringkasan & kendala; satu catatan per kejadian jadwal (unik di DB) |
+| 04 | Tunda dan Batal | Sudah dibuat, belum teruji | Tunda + alasan + jadwal pengganti; Batal + alasan; ubah status / kembalikan ke Terjadwal; progres terkoreksi otomatis |
+| 05 | Catatan dan riwayat mengajar | Sudah dibuat, belum teruji | Riwayat per kelas di halaman rencana; histori perubahan status per pertemuan (ditulis trigger, tidak bisa diubah guru) |
+| 06 | Progres mengajar otomatis | Sudah dibuat, belum teruji | Repository membaca rencana & catatan nyata; rumus teruji unit; pengganti tidak dihitung ganda |
+| 07 | Jadwal pengganti dan pengecualian | Sudah dibuat, belum teruji | Pengganti tanggal & jam sendiri (cek bentrok di tanggal itu, di dalam semester); libur = Batal/Tunda per tanggal; jadwal mingguan tidak berubah |
+| 08 | Edit kelas | Sudah dibuat, belum teruji | Dialog Ubah Kelas (tingkat/rombel), cek duplikat (app + constraint DB), riwayat tetap terhubung |
 
 ## Tahap 2 — Tahun Ajaran, Semester, Arsip
 
@@ -59,3 +59,4 @@ Audit awal: 18 November 2026, `main` = `c35df4f` (Fase A, Fase B, Bank Materi un
 ## Riwayat perubahan checklist
 
 - 18 Nov 2026 — audit awal; Tahap 1 dimulai di branch `feature/tahap-1-mengajar`.
+- 18 Nov 2026 — Tahap 1 (#01–#08) dibuat; migration `20261119100000_fase_c_mengajar` menunggu persetujuan untuk Supabase Cloud.

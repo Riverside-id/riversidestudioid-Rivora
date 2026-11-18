@@ -23,6 +23,7 @@ export interface ClassSummary {
   classId: string;
   classLabel: string;
   gradeLevel: GradeLevel;
+  section: string;
   sessionsPerWeek: number;
   planTopics: number;
 }
@@ -63,6 +64,7 @@ export async function getWeeklyOverview(
     classId: c.id,
     classLabel: c.displayName,
     gradeLevel: c.gradeLevel,
+    section: c.section,
     sessionsPerWeek: data.schedules.filter((s) => s.classId === c.id).length,
     planTopics: data.plans.filter((p) => p.classId === c.id).length,
   }));

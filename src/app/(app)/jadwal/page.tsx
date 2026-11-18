@@ -1,9 +1,11 @@
 import { Archive, CalendarDays, Users, X } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { SessionRow } from "@/components/dashboard/session-row";
 import { AddClassForm } from "@/components/jadwal/add-class-form";
 import { AddScheduleForm } from "@/components/jadwal/add-schedule-form";
+import { EditClassDialog } from "@/components/jadwal/edit-class-dialog";
 import { InlineAddPanel } from "@/components/jadwal/inline-add-panel";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -54,8 +56,8 @@ async function JadwalContent() {
       <div className="space-y-6">
         <PhaseNote>
           {isDemo
-            ? "Mode demo: data contoh tidak bisa diubah. Pengecualian per tanggal dan jadwal pengganti dibangun pada Fase C."
-            : "Pengecualian per tanggal (libur, ditunda) dan jadwal pengganti dibangun pada Fase C."}
+            ? "Mode demo: data contoh tidak bisa diubah."
+            : "Libur atau perubahan satu tanggal: buka sesinya, lalu pilih Tunda (bisa langsung buat jadwal pengganti) atau Batal. Jadwal mingguan tidak ikut berubah."}
         </PhaseNote>
 
         <Card aria-labelledby="jadwal-hari-ini-semua">
@@ -163,9 +165,14 @@ async function JadwalContent() {
                     <p className="font-semibold text-ink">Kelas {c.classLabel}</p>
                     <p className="text-sm text-ink-muted">
                       {c.sessionsPerWeek} sesi/minggu ·{" "}
-                      {c.planTopics > 0 ? `${c.planTopics} topik direncanakan` : "belum ada rencana"}
+                      <Link href={`/progres/${c.classId}`} className="font-semibold text-primary-strong underline-offset-2 hover:underline">
+                        {c.planTopics > 0 ? `${c.planTopics} topik direncanakan` : "buat rencana"}
+                      </Link>
                     </p>
                   </div>
+                  {canEdit ? (
+                    <EditClassDialog classId={c.classId} classLabel={c.classLabel} gradeLevel={c.gradeLevel} section={c.section} />
+                  ) : null}
                   {canEdit ? (
                     <ConfirmAction
                       trigger={<Archive aria-hidden className="size-4" />}

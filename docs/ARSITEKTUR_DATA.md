@@ -15,7 +15,23 @@ Migrasi: `supabase/migrations/`. Test: `tests/db/schema.test.ts` (PGlite & Supab
 | `weekly_schedules` | hari ISO 1–7, jam mulai/selesai, masa berlaku | ya (milik sendiri) |
 | `teaching_materials` | judul, topik, tingkat (opsional), jenis, `file_path`/`file_name`/`file_size`, `archived_at` | tidak (arsip) |
 
-Belum dibuat (Fase C): `class_lesson_plans`, `meeting_records`, `audit_events`.
+Belum dibuat: `audit_events` umum (histori status pertemuan sudah ada di `meeting_status_events`).
+
+## Fitur Mengajar (migration `20261119100000_fase_c_mengajar`)
+
+| Tabel | Isi | Hapus? |
+|---|---|---|
+| `class_lesson_plans` | topik per kelas & semester, `sort_order`, `planned_sessions` 1–60, `midterm_segment`, `material_id` | ya, hanya bila belum dirujuk catatan |
+| `meeting_records` | status Terjadwal/Selesai/Ditunda/Batal, `summary`, `notes`, `actual_date`, `completed_at`, jam tersalin, `replacement_for_id` | tidak (riwayat) |
+| `meeting_status_events` | histori perubahan status (trigger `SECURITY DEFINER`) | tidak; guru hanya bisa membaca |
+
+- Satu catatan per kejadian jadwal: `unique (weekly_schedule_id, planned_date)`; satu pengganti per pertemuan
+  ditunda: `unique (replacement_for_id)`; pengganti hanya untuk status Ditunda (RV005).
+- FK komposit: rencana & catatan selalu di kelas/semester/tahun milik guru yang sama; file materi milik guru yang sama;
+  topik catatan harus dari semester yang sama (RV006).
+- `completed_at` & `actual_date` diisi trigger; status tidak pernah berubah otomatis karena tanggal.
+- Jadwal rutin dihapus → catatan tetap (jam sudah tersalin), `weekly_schedule_id` dikosongkan.
+- Rollback darurat: `supabase/rollback/fase_c_mengajar_down.sql` (diuji: terapkan → rollback → terapkan ulang).
 
 ## Bank Materi & Storage (migration `20261118200000_fase_c_materi`)
 
