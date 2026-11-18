@@ -54,6 +54,11 @@ export function dbErrorMessage(error: DbErrorLike): string {
   }
   if (text.includes("profiles_timezone_supported")) return "Zona waktu tidak didukung.";
   if (text.includes("profiles_display_name_length")) return "Nama panggilan harus 2–40 huruf.";
+  if (text.includes("teaching_materials_file_size_limit")) return "Ukuran file melebihi 10 MB.";
+  if (text.includes("teaching_materials_title_length")) return "Judul materi harus 2–120 karakter.";
+  if (text.includes("teaching_materials_file_path") || text.includes("teaching_materials_file_shape")) {
+    return "File materi tidak valid. Unggah ulang file Anda.";
+  }
   if (error.code === "42501" || text.includes("row-level security")) {
     return "Anda tidak memiliki akses ke data ini.";
   }
@@ -63,6 +68,36 @@ export function dbErrorMessage(error: DbErrorLike): string {
 
 export function toDataError(error: DbErrorLike): DataError {
   return new DataError(dbErrorMessage(error), error.code);
+}
+
+export interface StorageErrorLike {
+  message?: string;
+  statusCode?: string | number;
+  status?: number;
+  name?: string;
+}
+
+/** Error dari Supabase Storage (unggah/buka file) → pesan untuk guru. */
+export function storageErrorMessage(error: StorageErrorLike): string {
+  const text = (error.message ?? "").toLowerCase();
+  const status = Number(error.statusCode ?? error.status ?? 0);
+  if (status === 413 || text.includes("maximum allowed size") || text.includes("too large")) {
+    return "Ukuran file melebihi 10 MB. Kecilkan atau pisahkan file, lalu coba lagi.";
+  }
+  if (status === 415 || text.includes("mime type") || text.includes("not supported")) {
+    return "Jenis file belum didukung. Unggah PDF, Word (DOC/DOCX), atau PowerPoint (PPT/PPTX).";
+  }
+  if (status === 403 || text.includes("row-level security") || text.includes("unauthorized")) {
+    return "Anda tidak memiliki akses ke file ini.";
+  }
+  if (status === 404 || text.includes("not found")) return "File materi tidak ditemukan. Coba unggah ulang.";
+  if (text.includes("already exists") || status === 409) return "File ini sudah pernah diunggah. Muat ulang halaman.";
+  if (error.name === "StorageUnknownError" || text.includes("fetch")) return CONNECTION_ERROR_MESSAGE;
+  return "File belum berhasil diproses. Coba lagi.";
+}
+
+export function toStorageError(error: StorageErrorLike): DataError {
+  return new DataError(storageErrorMessage(error), "STORAGE");
 }
 
 export interface AuthErrorLike {

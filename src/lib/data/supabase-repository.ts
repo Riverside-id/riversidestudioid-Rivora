@@ -6,6 +6,7 @@ import {
   mapProfile,
   mapSemester,
   mapTeachingClass,
+  mapTeachingMaterial,
   mapWeeklySchedule,
 } from "./supabase-mappers";
 
@@ -14,7 +15,7 @@ import {
  * RLS adalah penjaga utama; filter owner_id di sini adalah lapisan tambahan (defense in depth),
  * bukan satu-satunya proteksi (PRD §9).
  *
- * Materi, rencana materi, dan catatan pelaksanaan baru dibuat tabelnya di Fase C — sampai saat itu
+ * Rencana materi dan catatan pelaksanaan baru dibuat tabelnya di Fase C — sampai saat itu
  * mengembalikan daftar kosong sehingga UI menampilkan empty state yang sudah ada.
  */
 export function createSupabaseRepository(client: RivoraSupabaseClient, userId: string): RivoraRepository {
@@ -74,7 +75,14 @@ export function createSupabaseRepository(client: RivoraSupabaseClient, userId: s
     },
 
     async listMaterials() {
-      return [];
+      const { data, error } = await client
+        .from("teaching_materials")
+        .select("*")
+        .eq("owner_id", userId)
+        .is("archived_at", null)
+        .order("created_at", { ascending: false });
+      if (error) throw toDataError(error);
+      return data.map(mapTeachingMaterial);
     },
     async listLessonPlans() {
       return [];

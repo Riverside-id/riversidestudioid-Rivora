@@ -12,7 +12,7 @@ union all
 select 'C. fungsi public', coalesce(string_agg(p.proname, ', ' order by p.proname), 'tidak ada')
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public'
 union all
-select 'D. jumlah policy public (harus 17)', count(*)::text from pg_policies where schemaname = 'public'
+select 'D. jumlah policy public', count(*)::text from pg_policies where schemaname = 'public'
 union all
 select 'E. trigger di auth.users', coalesce(string_agg(tgname, ', '), 'tidak ada')
   from pg_trigger where tgrelid = 'auth.users'::regclass and not tgisinternal
@@ -31,4 +31,13 @@ union all
 select 'H. jumlah profil / akun',
        case when to_regclass('public.profiles') is null then 'tabel profiles belum ada'
             else (xpath('/row/v/text()', query_to_xml('select count(*)::text as v from public.profiles', false, true, '')))[1]::text end
-       || ' / ' || (select count(*) from auth.users)::text;
+       || ' / ' || (select count(*) from auth.users)::text
+union all
+select 'I. storage materi',
+       coalesce((select case when b.public then 'PUBLIK!' else 'privat' end
+                        || ', batas ' || (b.file_size_limit / 1048576)::text || ' MB, '
+                        || coalesce(array_length(b.allowed_mime_types, 1), 0)::text || ' tipe file, '
+                        || (select count(*) from pg_policies
+                            where schemaname = 'storage' and tablename = 'objects'
+                              and policyname like 'rivora_materi_%')::text || ' policy'
+                 from storage.buckets b where b.id = 'materi'), 'bucket materi belum ada');

@@ -5,6 +5,7 @@ import type {
   Semester,
   SemesterNumber,
   TeachingClass,
+  TeachingMaterial,
   WeeklySchedule,
   Weekday,
 } from "@/lib/domain/types";
@@ -57,6 +58,28 @@ export function mapTeachingClass(row: TableRow<"teaching_classes">): TeachingCla
     section: row.section,
     displayName: row.display_name,
     archivedAt: row.archived_at,
+  };
+}
+
+const MATERIAL_KINDS: readonly TeachingMaterial["kind"][] = ["pdf", "doc", "docx", "ppt", "pptx", "video", "link", "note"];
+
+export function mapTeachingMaterial(row: TableRow<"teaching_materials">): TeachingMaterial {
+  const kind = MATERIAL_KINDS.find((k) => k === row.kind);
+  if (!kind) throw new Error(`Jenis materi tidak dikenal: ${row.kind}`);
+  return {
+    id: row.id,
+    ownerId: row.owner_id,
+    title: row.title,
+    description: row.description,
+    topic: row.topic,
+    gradeLevel: row.grade_level as GradeLevel | null,
+    tags: row.tags,
+    kind,
+    filePath: row.file_path,
+    fileName: row.file_name,
+    fileSize: row.file_size === null ? null : Number(row.file_size),
+    externalUrl: row.external_url,
+    createdAt: row.created_at,
   };
 }
 
