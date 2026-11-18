@@ -62,6 +62,20 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- Akun yang sudah ada sebelum migration ini (mis. dibuat di Dashboard) juga mendapat profil.
+insert into public.profiles (user_id, display_name)
+select
+  u.id,
+  case
+    when char_length(left(btrim(coalesce(u.raw_user_meta_data ->> 'display_name', '')), 40)) >= 2
+      then left(btrim(u.raw_user_meta_data ->> 'display_name'), 40)
+    when char_length(left(split_part(coalesce(u.email, ''), '@', 1), 40)) >= 2
+      then left(split_part(u.email, '@', 1), 40)
+    else 'Guru'
+  end
+from auth.users u
+on conflict (user_id) do nothing;
+
 -- Tahun ajaran: semester tetap berada di dalam rentang saat tanggal tahun diubah ------------
 create function public.validate_academic_year()
 returns trigger

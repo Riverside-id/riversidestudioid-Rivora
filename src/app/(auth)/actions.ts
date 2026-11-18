@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { readDataConfig } from "@/lib/data/config";
 import { authErrorMessage } from "@/lib/data/errors";
+import { getSiteOrigin } from "@/lib/server/site-url";
 import { createSupabaseServerClient, getVerifiedUserId } from "@/lib/supabase/server";
 import { pickValues, withValues, type ActionState } from "@/lib/validation/action-state";
 import { forgotPasswordSchema, loginSchema, registerSchema } from "@/lib/validation/auth";
@@ -45,7 +46,11 @@ async function signUp(form: FormData): Promise<ActionState> {
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
-    options: { data: { display_name: parsed.data.displayName } },
+    options: {
+      data: { display_name: parsed.data.displayName },
+      // Template email bawaan Cloud (PKCE) kembali ke sini dengan ?code=…; template token_hash juga didukung.
+      emailRedirectTo: `${await getSiteOrigin()}/auth/confirm?next=/onboarding`,
+    },
   });
   if (error) return { status: "error", message: authErrorMessage(error) };
   // Konfirmasi email dimatikan → langsung ada sesi.
@@ -66,7 +71,9 @@ async function forgotPassword(form: FormData): Promise<ActionState> {
 
   if (!isDemo()) {
     const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email);
+    const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+      redirectTo: `${await getSiteOrigin()}/auth/confirm?next=/reset-password`,
+    });
     // Hanya batas permintaan yang ditampilkan; selebihnya pesan sama agar email terdaftar tidak bisa ditebak.
     if (error && (error.code === "over_email_send_rate_limit" || error.code === "over_request_rate_limit")) {
       return { status: "error", message: authErrorMessage(error) };

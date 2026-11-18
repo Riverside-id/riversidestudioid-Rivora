@@ -42,11 +42,17 @@ begin
     raise exception 'Pengaturan awal sudah selesai.' using errcode = 'RV002';
   end if;
 
-  update public.profiles
-  set display_name = btrim(payload ->> 'display_name'),
-      school_name = nullif(btrim(coalesce(payload ->> 'school_name', '')), ''),
-      onboarded_at = now()
-  where user_id = v_uid;
+  insert into public.profiles (user_id, display_name, school_name, onboarded_at)
+  values (
+    v_uid,
+    btrim(payload ->> 'display_name'),
+    nullif(btrim(coalesce(payload ->> 'school_name', '')), ''),
+    now()
+  )
+  on conflict (user_id) do update
+    set display_name = excluded.display_name,
+        school_name = excluded.school_name,
+        onboarded_at = excluded.onboarded_at;
 
   insert into public.academic_years (owner_id, label, start_date, end_date, status)
   values (

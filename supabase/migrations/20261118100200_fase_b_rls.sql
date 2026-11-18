@@ -11,19 +11,38 @@ alter table public.semesters enable row level security;
 alter table public.teaching_classes enable row level security;
 alter table public.weekly_schedules enable row level security;
 
+-- Hak tabel dinyatakan EKSPLISIT, tidak bergantung pada pengaturan "expose new tables" project.
 -- Pertahanan berlapis: peran anon tidak mendapat hak tabel sama sekali.
 revoke all on table
   public.profiles, public.subjects, public.academic_years,
   public.semesters, public.teaching_classes, public.weekly_schedules
-from anon;
+from anon, authenticated;
 
--- Data acuan hanya boleh dibaca oleh guru yang login.
-revoke insert, update, delete, truncate on table public.subjects from authenticated;
+grant usage on schema public to authenticated;
+grant select on table public.subjects to authenticated;
+grant select, insert, update on table public.profiles to authenticated;
+grant select, insert, update on table public.academic_years to authenticated;
+grant select, insert, update on table public.semesters to authenticated;
+grant select, insert, update on table public.teaching_classes to authenticated;
+grant select, insert, update, delete on table public.weekly_schedules to authenticated;
+
+-- Fungsi pembantu/trigger tidak boleh dipanggil langsung lewat API (/rest/v1/rpc).
+revoke all on function public.time_subtype_diff(time, time) from public, anon, authenticated;
+revoke all on function public.set_updated_at() from public, anon, authenticated;
+revoke all on function public.validate_academic_year() from public, anon, authenticated;
+revoke all on function public.validate_semester() from public, anon, authenticated;
+revoke all on function public.validate_weekly_schedule() from public, anon, authenticated;
+revoke all on function public.prevent_archived_year_changes() from public, anon, authenticated;
 
 -- profiles ------------------------------------------------------------------------------
 create policy profiles_select_own on public.profiles
   for select to authenticated
   using (user_id = (select auth.uid()));
+
+-- Cadangan bila profil belum ada (mis. akun dibuat sebelum migration); hanya untuk diri sendiri.
+create policy profiles_insert_own on public.profiles
+  for insert to authenticated
+  with check (user_id = (select auth.uid()));
 
 create policy profiles_update_own on public.profiles
   for update to authenticated

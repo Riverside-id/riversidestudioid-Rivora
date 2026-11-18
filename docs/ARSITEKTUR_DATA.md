@@ -18,7 +18,9 @@ Belum dibuat (Fase C): `teaching_materials` + Storage, `class_lesson_plans`, `me
 
 ## Lapisan proteksi
 
-1. **RLS** di semua tabel: `owner_id = auth.uid()` untuk select/insert/update; `anon` tanpa hak.
+1. **Hak & RLS**: `GRANT` eksplisit hanya untuk `authenticated` (tidak bergantung pada pengaturan
+   "expose new tables" project); `anon` tanpa hak; tanpa hak DELETE untuk tahun/semester/kelas.
+   RLS di semua tabel: `owner_id = auth.uid()` untuk select/insert/update. Fungsi pembantu tidak bisa dipanggil lewat API.
 2. **Foreign key komposit**:
    `(academic_year_id, owner_id) → academic_years(id, owner_id)`,
    `(class_id, academic_year_id) → teaching_classes(id, academic_year_id)`,
@@ -29,12 +31,15 @@ Belum dibuat (Fase C): `teaching_materials` + Storage, `class_lesson_plans`, `me
 4. **Exclusion constraint** `weekly_schedules_no_overlap` (btree_gist, rentang jam setengah-terbuka `[mulai, selesai)`
    × rentang tanggal berlaku): jadwal milik guru yang sama tidak boleh beririsan. 10.00–11.00 dan 11.00–12.00 boleh.
 5. **Trigger**:
-   - `handle_new_user`: profil otomatis saat mendaftar (nama dari metadata, cadangan dari email).
+   - `handle_new_user`: profil otomatis saat mendaftar (nama dari metadata, cadangan dari email);
+     akun yang sudah ada sebelum migration mendapat profil lewat backfill.
    - `validate_semester` / `validate_academic_year` / `validate_weekly_schedule`: tanggal berada di dalam periode induk.
    - `prevent_archived_year_changes`: tahun berstatus `archived` dan seluruh isinya baca-saja; pulihkan hanya dengan
      mengubah `status`. Perubahan berantai dari sistem (hapus akun) tetap diizinkan.
-6. **RPC `complete_onboarding(jsonb)`** (`SECURITY INVOKER`): profil + tahun + 2 semester + kelas + jadwal dalam satu
-   transaksi; gagal sebagian = batal semua.
+6. **RPC `complete_onboarding(jsonb)`** (`SECURITY INVOKER`): profil (upsert) + tahun + 2 semester + kelas + jadwal
+   dalam satu transaksi; gagal sebagian = batal semua.
+
+Rollback darurat (bukan migration): `supabase/rollback/fase_b_down.sql` — diuji migrate → rollback → migrate di PGlite.
 
 Kode error khusus (dipetakan ke pesan UI di `src/lib/data/errors.ts`): `RV001` arsip, `RV002` onboarding sudah selesai,
 `RV003` tanggal di luar periode, `RV004` kelas diarsipkan.

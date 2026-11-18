@@ -176,11 +176,10 @@ describe("RLS — isolasi data antar guru", () => {
     await expect(db.as(guruB, (q) => q.query("insert into public.subjects (code, name) values ('ipa', 'IPA')"))).rejects.toThrow(/permission denied/);
   });
 
-  it("tidak ada hapus untuk tahun ajaran & kelas (arsip bukan hapus)", async () => {
-    await db.as(guruA, async (q) => {
-      expect((await q.query("delete from public.academic_years returning id")).rows).toHaveLength(0);
-      expect((await q.query("delete from public.teaching_classes returning id")).rows).toHaveLength(0);
-    });
+  it("tidak ada hapus untuk tahun ajaran, semester & kelas (arsip bukan hapus)", async () => {
+    for (const t of ["academic_years", "semesters", "teaching_classes"]) {
+      await expect(db.as(guruA, (q) => q.query(`delete from public.${t}`)), t).rejects.toThrow(/permission denied/);
+    }
     expect(await count(guruA, "teaching_classes")).toBe(2);
   });
 });
@@ -385,5 +384,26 @@ describe("kontrak aplikasi ↔ database", () => {
     });
     expect(result.year).toEqual({ label: "2026/2027", start_date: "2026-07-01", active_number: 2 });
     expect(result.schedule).toEqual({ effective_from: "2027-01-01", effective_until: "2027-06-30" });
+  });
+});
+
+describe("kesiapan Supabase Cloud", () => {
+  it("fungsi pembantu tidak bisa dipanggil langsung oleh guru maupun anon", async () => {
+    await expect(db.as(guruA, (q) => q.query("select public.time_subtype_diff('10:00', '09:00')"))).rejects.toThrow(/permission denied/);
+    await expect(db.as(null, (q) => q.query("select public.time_subtype_diff('10:00', '09:00')"))).rejects.toThrow(/permission denied/);
+  });
+
+  it("onboarding tetap berhasil walau profil belum ada (akun lama sebelum migration)", async () => {
+    const userF = await db.createUser(`guru-f-${Date.now()}@contoh.test`, "Bu Lama");
+    await db.admin.query("delete from public.profiles where user_id = $1", [userF]);
+    await db.as(userF, (q) => q.query("select public.complete_onboarding($1::jsonb)", [JSON.stringify(onboardingPayload())]));
+    const p = await db.as(userF, (q) => q.query<{ display_name: string; onboarded: boolean }>("select display_name, onboarded_at is not null as onboarded from public.profiles"));
+    expect(p.rows).toEqual([{ display_name: "Bu Rina", onboarded: true }]);
+  });
+
+  it("guru tidak bisa membuat profil atas nama guru lain", async () => {
+    await expect(
+      db.as(guruB, (q) => q.query("insert into public.profiles (user_id, display_name) values ($1, 'Palsu')", [guruA])),
+    ).rejects.toThrow(/row-level security|duplicate key/);
   });
 });
