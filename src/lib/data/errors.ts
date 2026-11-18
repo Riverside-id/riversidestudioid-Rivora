@@ -70,7 +70,7 @@ export function dbErrorMessage(error: DbErrorLike): string {
   if (text.includes("teaching_materials_file_path") || text.includes("teaching_materials_file_shape")) {
     return "File materi tidak valid. Unggah ulang file Anda.";
   }
-  if (error.code === "PGRST205") {
+  if (error.code === "PGRST205" || error.code === "PGRST202") {
     return "Fitur ini belum aktif karena database belum diperbarui. Hubungi pengelola Rivora.";
   }
   if (error.code === "42501" || text.includes("row-level security")) {

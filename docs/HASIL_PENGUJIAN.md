@@ -2,6 +2,19 @@
 
 Catatan jujur per lingkungan. "Lulus di PGlite" **bukan** berarti lulus di Supabase asli.
 
+## Tahap 2 Tahun Ajaran & Arsip (#09–#15) — 19 November 2026
+
+| Lapisan | Lingkungan | Perintah | Hasil |
+|---|---|---|---|
+| Pergantian tahun (arsipkan + buat baru + salin kelas/rencana/jadwal tanpa progres), label duplikat atomik, data lama utuh & baca-saja, pulihkan (swap tahun aktif), lintas akun & anon ditolak | **PGlite** | `tests/db/academic-year.test.ts` | ✅ 7 skenario |
+| Pulihkan materi & kelas (pemilik saja, file & riwayat tetap ada) | PGlite | `tests/db/materials.test.ts`, `tests/db/teaching.test.ts` | ✅ |
+| Ringkasan arsip menghitung kelas yang diarsipkan | lokal | `src/lib/__tests__/archive.test.ts` | ✅ |
+| Transisi Cloud → RPC tahun ajaran, rollback berurutan | PGlite | `tests/db/sql-editor-bundle.test.ts` | ✅ |
+| Menu bisa digulir di layar pendek (1280×450, 740×360) | lokal, browser | manual (JS: overflow & posisi menu) | ✅ |
+| Arsip: Mulai Tahun Ajaran Baru + dialog konfirmasi, detail arsip dengan filter | lokal, browser (data contoh) | manual | ✅ |
+| **Migration Tahap 1 `20261119100000`** | **Supabase Cloud** | REST `GET /rest/v1/meeting_records` → `42501` | ✅ tabel ada, anon ditolak |
+| **Migration `20261119200000_fase_d_tahun_ajaran`** | **Supabase Cloud** | SQL Editor | ⏳ menunggu persetujuan |
+
 ## Tahap 1 Fitur Mengajar (#01–#08) — 18 November 2026
 
 | Lapisan | Lingkungan | Perintah | Hasil |
