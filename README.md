@@ -17,8 +17,8 @@ materi, dan progres pelaksanaan pembelajaran per kelas, per semester, per tahun 
 | Fase | Status |
 |---|---|
 | A — Foundation & UI | Selesai, di `main` |
-| B — Auth & Data | Diimplementasikan di `feature/fase-b`; migration **belum diterapkan** ke Supabase Cloud (menunggu persetujuan) |
-| C — Teaching Core | Belum |
+| B — Auth & Data | Di `feature/fase-b` (PR ke `main`); migration **sudah diterapkan** ke Supabase Cloud (18 Nov 2026) |
+| C — Teaching Core | Sebagian di `feature/fase-c-materi`: Bank Materi unggah PDF/Word/PowerPoint (migration **belum diterapkan** ke Cloud) |
 | D — Periode & Arsip | Belum |
 | E — QA & Staging | Belum |
 
@@ -33,8 +33,9 @@ mata pelajaran (Matematika), jadwal mingguan dengan pencegahan bentrok di databa
 pengaturan profil/periode/kata sandi.
 
 > **Status pengujian Fase B:** migrasi, RLS dua akun, constraint, trigger, dan RPC lulus di **PGlite**
-> (Postgres WASM + tiruan skema `auth` Supabase). Test integrasi Auth + RLS lewat HTTP terhadap
-> **Supabase Cloud belum dijalankan** — menunggu persetujuan migration remote. Rincian: `docs/HASIL_PENGUJIAN.md`.
+> (Postgres WASM + tiruan skema `auth` Supabase). Di **Supabase Cloud** migration sudah diterapkan dan struktur
+> (tabel, RLS, policy, hak akses, trigger) sudah dicek. Test integrasi Auth + RLS lewat HTTP terhadap Cloud
+> **belum dijalankan** — menunggu kunci API di `.env.test.local`. Rincian: `docs/HASIL_PENGUJIAN.md`.
 
 ## Menjalankan lokal
 
@@ -53,7 +54,9 @@ Buka http://localhost:3000. Alur cepat: `/` → **Masuk** (isi email/sandi apa s
 Project: `efawovyrzkvgdphgkuuj` (`https://efawovyrzkvgdphgkuuj.supabase.co`).
 
 1. Isi `.env.local`: `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (publishable, bukan secret).
-2. Terapkan migration (**hanya dengan persetujuan pemilik**). Login CLI dengan akun yang punya akses ke project:
+2. Terapkan migration (**hanya dengan persetujuan pemilik**). Status: Fase B sudah diterapkan 18 Nov 2026 lewat SQL Editor.
+
+   **Jalur A — CLI** (akun CLI harus punya akses ke project):
 
    ```bash
    supabase login
@@ -71,9 +74,15 @@ Project: `efawovyrzkvgdphgkuuj` (`https://efawovyrzkvgdphgkuuj.supabase.co`).
    supabase db push
    ```
 
+   **Jalur B — SQL Editor** (tanpa CLI): `npm run db:bundle` → tempel isi `supabase/cloud/sql_editor_bundle.sql`
+   ke Dashboard → SQL Editor → Run. Untuk project yang sudah berjalan, bundel hanya migration baru, mis.
+   `npm run db:bundle -- --since 20261118200000` (Bank Materi). Satu transaksi, riwayat migration ikut dicatat, dan hasil cek tampil di Results.
+   Jika muncul `already exists`, migration sudah pernah diterapkan: jangan ulangi.
+
+   Cek kondisi kapan saja (hanya membaca): jalankan `supabase/checks/cek_kondisi.sql` di SQL Editor.
    Pembatalan darurat (menghapus data Fase B): `supabase/rollback/fase_b_down.sql`.
 3. Dashboard → Authentication → URL Configuration: Site URL `http://localhost:3000`, Redirect URLs `http://localhost:3000/**`
-   (nanti ditambah URL Netlify). Sign In / Providers → Email: konfirmasi email **aktif**, panjang sandi minimal 8.
+   dan URL Vercel (lihat bagian Hosting). Sign In / Providers → Email: konfirmasi email **aktif**, panjang sandi minimal 8.
    Disarankan: Email Templates *Confirm signup* & *Reset password* memakai isi `supabase/templates/*.html` (tautan `token_hash`).
 4. Ubah `RIVORA_DATA_SOURCE=supabase` di `.env.local`, lalu `npm run dev`.
 5. Test integrasi ke Cloud: isi `.env.test.local` (lihat `.env.example`, bagian "Khusus test"), lalu:
@@ -116,7 +125,8 @@ Tips demo (mode fixture):
 | `npm run typecheck` | `next typegen` + `tsc --noEmit` |
 | `npm test` | Vitest: unit, komponen (jsdom), dan test database di PGlite |
 | `npm run test:db:supabase` | Test database yang sama terhadap Postgres Supabase lokal |
-| `npm run test:integration` | Auth + RLS dua akun lewat HTTP ke Supabase lokal (butuh variabel `RIVORA_TEST_*`) |
+| `npm run test:integration` | Auth + RLS dua akun lewat HTTP ke Supabase (butuh variabel `RIVORA_TEST_*`) |
+| `npm run db:bundle` | Bundel migration + riwayat + cek untuk SQL Editor Supabase |
 | `npm run db:start` / `db:stop` / `db:reset` | Supabase lokal (Docker) |
 | `npm run db:types` | Regenerasi `src/lib/supabase/database.types.ts` dari database lokal |
 | `npm run build` | Build production |
@@ -147,6 +157,7 @@ Lihat [`.env.example`](.env.example). Tidak ada secret di repo.
 | `RIVORA_ALLOW_DEMO_DATA` | `true` \| `false` | Hanya dengan izin pemilik (domain preview bersifat publik) |
 | `NEXT_PUBLIC_SUPABASE_URL` | URL | Mode supabase |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | kunci publishable | Mode supabase; kunci rahasia tidak pernah dipakai aplikasi |
+| `NEXT_PUBLIC_SITE_URL` | origin situs | Tautan email Auth; wajib di Vercel |
 
 ## Struktur folder
 
@@ -212,10 +223,11 @@ Keputusan pemilik (18 Nov 2026): hosting memakai **Vercel** (menggantikan rencan
 | Repo | `Riverside-id/riversidestudioid-Rivora` (terhubung; push ke `main` = deploy production) |
 | Deploy preview | otomatis untuk branch lain/PR, dilindungi *Vercel Authentication* (hanya anggota tim) |
 
-Status production saat ini (commit `34d8918`, Fase A): halaman publik tampil; halaman aplikasi sengaja terkunci
-pengaman data demo karena tidak ada variabel environment — tidak ada angka contoh di domain publik.
+Status 18 Nov 2026: env **Preview** dan **Production** sudah diisi (mode supabase). Production menjalankan kode
+Fase B (deployment dipromosikan lewat dashboard, belum lewat merge ke `main`): halaman aplikasi meminta login.
+Selama PR Fase B belum di-merge, push ke `main` akan mengembalikan production ke Fase A.
 
-Variabel environment (Vercel → Project → Settings → Environment Variables), setelah Fase B digabung dan Supabase siap:
+Variabel environment (Vercel → Project → Settings → Environment Variables):
 
 - **Production**: `RIVORA_DATA_SOURCE=supabase`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
   `NEXT_PUBLIC_SITE_URL=https://rivora-rust.vercel.app`. Jangan set `RIVORA_ALLOW_DEMO_DATA`.
@@ -242,13 +254,13 @@ vercel ls rivora --scope anugrahniezra
 - `src/lib/supabase/database.types.ts` ditulis manual; regenerasi dengan `npm run db:types` setelah Supabase lokal jalan.
 - Email produksi: layanan email bawaan Supabase hanya untuk uji (kuota kecil, terbatas anggota tim) — perlu SMTP
   sendiri sebelum pilot dengan guru.
-- Belum ada: materi/Storage, rencana per kelas, catatan Selesai/Tunda (Fase C); pergantian semester aktif,
+- Belum ada: tautan video/catatan teks & pencarian materi, rencana per kelas, catatan Selesai/Tunda (Fase C); pergantian semester aktif,
   arsip tahun, salin tahun baru, laporan (Fase D); hapus akun mandiri (butuh fungsi admin — direncanakan).
 - Draf onboarding tersimpan di `localStorage` perangkat sampai langkah terakhir dikirim.
 - `/jadwal/[id]` yang tidak ada menampilkan halaman "tidak ditemukan", tetapi status HTTP tetap 200
   karena konten di-stream (perilaku standar streaming Next.js).
-- Belum diuji di Netlify. Dukungan Cache Components/Partial Prerendering pada runtime Netlify perlu
-  dipastikan saat deploy preview pertama; jika bermasalah, `cacheComponents` dapat dimatikan di `next.config.ts`.
+- Vercel mendukung Cache Components/Partial Prerendering secara bawaan; build Fase A & B sudah berhasil di Vercel.
+  Alur login sungguhan di Vercel baru bisa dicoba setelah variabel environment Supabase diisi.
 - `npm audit`: 0 kerentanan pada dependency production; 16 temuan *high* hanya di tooling dev
   (advisory ReDoS `picomatch` lewat vitest/vite, belum ada versi perbaikan) — tidak ikut ke bundle aplikasi.
 

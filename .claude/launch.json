@@ -4,8 +4,28 @@
     {
       "name": "rivora-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--port", "3100"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3100"
+      ],
       "port": 3100
+    },
+    {
+      "name": "rivora-dev-demo",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "RIVORA_DATA_SOURCE=fixture",
+        "npm",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3101"
+      ],
+      "port": 3101
     }
   ]
 }

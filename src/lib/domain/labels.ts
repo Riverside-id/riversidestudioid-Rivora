@@ -19,6 +19,8 @@ export const MEETING_STATUS_LABEL: Record<MeetingStatus, string> = {
 
 export const MATERIAL_KIND_LABEL: Record<MaterialKind, string> = {
   pdf: "PDF",
+  doc: "Word",
+  docx: "Word",
   ppt: "PPT",
   pptx: "PPTX",
   video: "Video",
