@@ -338,6 +338,7 @@ function generateMeetings(semester: Semester, spec: MeetingSpec): MeetingRecord[
           startTime: null,
           endTime: null,
           status: "completed" as const,
+          summary: null,
           notes: spec.notes?.[date] ?? null,
           replacementForId: null,
         },
@@ -356,6 +357,7 @@ function generateMeetings(semester: Semester, spec: MeetingSpec): MeetingRecord[
         startTime: null,
         endTime: null,
         status: exception.status,
+        summary: null,
         notes: exception.notes,
         replacementForId: null,
       },
@@ -373,6 +375,7 @@ function generateMeetings(semester: Semester, spec: MeetingSpec): MeetingRecord[
         startTime,
         endTime,
         status: "completed",
+        summary: null,
         notes: "Sesi pengganti.",
         replacementForId: id,
       });

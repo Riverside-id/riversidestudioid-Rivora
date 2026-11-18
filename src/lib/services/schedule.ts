@@ -4,7 +4,7 @@ import { findScheduleConflicts, parseOccurrenceId, timeToMinutes } from "@/lib/d
 import type { GradeLevel, LocalTime, Weekday } from "@/lib/domain/types";
 import type { AppContext } from "./app-context";
 import { EMPTY_SEMESTER_DATA, loadSemesterData } from "./semester-data";
-import { buildSessionsForDate, type TeachingSession } from "./sessions";
+import { buildSessionsForDate, type SemesterData, type TeachingSession } from "./sessions";
 
 export interface WeeklySlot {
   scheduleId: string;
@@ -70,7 +70,16 @@ export async function getWeeklyOverview(
   return { days, classes, conflictCount: findScheduleConflicts(data.schedules).length };
 }
 
-/** Detail satu sesi dari ID kejadian jadwal (`<scheduleId>_<tanggal>`) atau ID catatan pengganti. */
+/** Cari satu sesi dari ID kejadian jadwal (`<scheduleId>_<tanggal>`) atau ID catatan (pengganti). */
+export function findSession(data: SemesterData, sessionId: string): TeachingSession | null {
+  const occurrence = parseOccurrenceId(sessionId);
+  const date =
+    occurrence?.date ?? data.meetings.find((m) => m.id === sessionId)?.plannedDate ?? null;
+  if (!date) return null;
+  return buildSessionsForDate(date, data).find((s) => s.id === sessionId) ?? null;
+}
+
+/** Detail satu sesi pada semester terpilih. */
 export async function getSessionDetail(
   repo: RivoraRepository,
   ctx: AppContext,
@@ -78,10 +87,5 @@ export async function getSessionDetail(
 ): Promise<TeachingSession | null> {
   if (!ctx.activeYear || !ctx.selectedSemester) return null;
   const data = await loadSemesterData(repo, ctx.activeYear, ctx.selectedSemester);
-
-  const occurrence = parseOccurrenceId(sessionId);
-  const date =
-    occurrence?.date ?? data.meetings.find((m) => m.id === sessionId)?.plannedDate ?? null;
-  if (!date) return null;
-  return buildSessionsForDate(date, data).find((s) => s.id === sessionId) ?? null;
+  return findSession(data, sessionId);
 }

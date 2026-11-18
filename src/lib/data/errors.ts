@@ -29,7 +29,7 @@ export class DemoReadOnlyError extends DataError {
   }
 }
 
-const RIVORA_CODES = new Set(["RV001", "RV002", "RV003", "RV004"]);
+const RIVORA_CODES = new Set(["RV001", "RV002", "RV003", "RV004", "RV005", "RV006"]);
 
 export function dbErrorMessage(error: DbErrorLike): string {
   const text = `${error.message ?? ""} ${error.details ?? ""}`;
@@ -57,6 +57,15 @@ export function dbErrorMessage(error: DbErrorLike): string {
   if (text.includes("profiles_timezone_supported")) return "Zona waktu tidak didukung.";
   if (text.includes("profiles_display_name_length")) return "Nama panggilan harus 2–40 huruf.";
   if (text.includes("teaching_materials_file_size_positive")) return "File kosong. Pilih file lain.";
+  if (text.includes("meeting_records_plan_fk")) {
+    return "Rencana ini sudah dipakai di catatan pertemuan, jadi tidak bisa dihapus. Ubah judul atau jumlah pertemuannya saja.";
+  }
+  if (text.includes("meeting_records_replacement_key")) return "Pertemuan ini sudah punya jadwal pengganti.";
+  if (text.includes("meeting_records_occurrence_key")) return "Pertemuan ini sudah dicatat. Muat ulang halaman.";
+  if (text.includes("meeting_records_time_order")) return "Jam selesai harus setelah jam mulai.";
+  if (text.includes("class_lesson_plans_sessions_range")) return "Jumlah pertemuan harus 1–60.";
+  if (text.includes("class_lesson_plans_title_length")) return "Judul topik harus 2–120 karakter.";
+  if (text.includes("class_lesson_plans_material_fk")) return "File materi tidak ditemukan di Bank Materi Anda.";
   if (text.includes("teaching_materials_title_length")) return "Judul materi harus 2–120 karakter.";
   if (text.includes("teaching_materials_file_path") || text.includes("teaching_materials_file_shape")) {
     return "File materi tidak valid. Unggah ulang file Anda.";

@@ -152,6 +152,98 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["teaching_materials"]["Insert"]>;
         Relationships: [];
       };
+      class_lesson_plans: {
+        Row: {
+          id: string;
+          owner_id: string;
+          academic_year_id: string;
+          class_id: string;
+          semester_id: string;
+          material_id: string | null;
+          title: string;
+          sort_order: number;
+          planned_sessions: number;
+          midterm_segment: string | null;
+        } & Timestamps;
+        Insert: {
+          id?: string;
+          owner_id?: string;
+          academic_year_id: string;
+          class_id: string;
+          semester_id: string;
+          material_id?: string | null;
+          title: string;
+          sort_order?: number;
+          planned_sessions: number;
+          midterm_segment?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["class_lesson_plans"]["Insert"]>;
+        Relationships: [];
+      };
+      meeting_records: {
+        Row: {
+          id: string;
+          owner_id: string;
+          academic_year_id: string;
+          class_id: string;
+          semester_id: string;
+          weekly_schedule_id: string | null;
+          lesson_plan_id: string | null;
+          replacement_for_id: string | null;
+          planned_date: string;
+          actual_date: string | null;
+          start_time: string;
+          end_time: string;
+          status: string;
+          summary: string | null;
+          notes: string | null;
+          completed_at: string | null;
+        } & Timestamps;
+        Insert: {
+          id?: string;
+          owner_id?: string;
+          academic_year_id: string;
+          class_id: string;
+          semester_id: string;
+          weekly_schedule_id?: string | null;
+          lesson_plan_id?: string | null;
+          replacement_for_id?: string | null;
+          planned_date: string;
+          actual_date?: string | null;
+          start_time: string;
+          end_time: string;
+          status?: string;
+          summary?: string | null;
+          notes?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["meeting_records"]["Insert"]>;
+        Relationships: [];
+      };
+      meeting_status_events: {
+        Row: {
+          id: string;
+          owner_id: string;
+          meeting_id: string;
+          from_status: string | null;
+          to_status: string;
+          changed_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          meeting_id: string;
+          from_status?: string | null;
+          to_status: string;
+          changed_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["meeting_status_events"]["Insert"]>;
+        Relationships: [];
+      };
       weekly_schedules: {
         Row: {
           id: string;

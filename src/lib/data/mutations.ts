@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { GradeLevel, ISODate, LocalTime, Weekday } from "@/lib/domain/types";
+import type { GradeLevel, ISODate, LocalTime, MeetingStatus, MidtermSegment, Weekday } from "@/lib/domain/types";
 import {
   checkMaterialFile,
   MATERIAL_BUCKET,
@@ -53,7 +53,46 @@ export interface RivoraMutations {
   archiveMaterial(materialId: string): Promise<void>;
   /** Signed URL berdurasi pendek: PDF dibuka di browser, Word/PowerPoint diunduh. */
   getMaterialFileUrl(materialId: string): Promise<string>;
+
+  updateClass(input: { classId: string; gradeLevel: GradeLevel; section: string }): Promise<void>;
+
+  createLessonPlan(input: {
+    academicYearId: string;
+    classId: string;
+    semesterId: string;
+    title: string;
+    plannedSessions: number;
+    midtermSegment: MidtermSegment | null;
+    materialId: string | null;
+  }): Promise<void>;
+  updateLessonPlan(input: {
+    planId: string;
+    title: string;
+    plannedSessions: number;
+    midtermSegment: MidtermSegment | null;
+    materialId: string | null;
+  }): Promise<void>;
+  moveLessonPlan(input: { planId: string; direction: "up" | "down" }): Promise<void>;
+  /** Ditolak database bila rencana sudah punya catatan pelaksanaan. */
+  deleteLessonPlan(planId: string): Promise<void>;
+
+  /**
+   * Catat pelaksanaan satu pertemuan (Selesai/Ditunda/Batal/Terjadwal). Untuk jadwal rutin, catatan
+   * dibuat atau diperbarui per kejadian (jadwal + tanggal) sehingga tidak pernah ganda.
+   */
+  saveMeeting(input: {
+    target: MeetingTarget;
+    status: MeetingStatus;
+    lessonPlanId: string | null;
+    actualDate: ISODate | null;
+    summary: string | null;
+    notes: string | null;
+  }): Promise<string>;
+  /** Jadwal pengganti untuk pertemuan yang ditunda (tanggal & jam sendiri, tidak mengubah jadwal mingguan). */
+  createReplacement(input: { postponedRecordId: string; date: ISODate; startTime: LocalTime; endTime: LocalTime }): Promise<void>;
 }
+
+export type MeetingTarget = { kind: "occurrence"; scheduleId: string; date: ISODate } | { kind: "record"; recordId: string };
 
 export interface MaterialUploadTicket {
   path: string;
@@ -200,6 +239,176 @@ export function createSupabaseMutations(client: RivoraSupabaseClient, userId: st
         .select("id");
       if (error) throw toDataError(error);
       ensureAffected(data);
+    },
+
+    async updateClass({ classId, gradeLevel, section }) {
+      const { data, error } = await client
+        .from("teaching_classes")
+        .update({ grade_level: gradeLevel, section, display_name: `${gradeLevel}${section}` })
+        .eq("id", classId)
+        .eq("owner_id", userId)
+        .is("archived_at", null)
+        .select("id");
+      if (error) throw toDataError(error);
+      ensureAffected(data);
+    },
+
+    async createLessonPlan(input) {
+      const { data: last, error: lastError } = await client
+        .from("class_lesson_plans")
+        .select("sort_order")
+        .eq("owner_id", userId)
+        .eq("class_id", input.classId)
+        .eq("semester_id", input.semesterId)
+        .order("sort_order", { ascending: false })
+        .limit(1);
+      if (lastError) throw toDataError(lastError);
+      const { error } = await client.from("class_lesson_plans").insert({
+        academic_year_id: input.academicYearId,
+        class_id: input.classId,
+        semester_id: input.semesterId,
+        title: input.title,
+        planned_sessions: input.plannedSessions,
+        midterm_segment: input.midtermSegment,
+        material_id: input.materialId,
+        sort_order: (last?.[0]?.sort_order ?? -1) + 1,
+      });
+      if (error) throw toDataError(error);
+    },
+
+    async updateLessonPlan({ planId, title, plannedSessions, midtermSegment, materialId }) {
+      const { data, error } = await client
+        .from("class_lesson_plans")
+        .update({ title, planned_sessions: plannedSessions, midterm_segment: midtermSegment, material_id: materialId })
+        .eq("id", planId)
+        .eq("owner_id", userId)
+        .select("id");
+      if (error) throw toDataError(error);
+      ensureAffected(data);
+    },
+
+    async moveLessonPlan({ planId, direction }) {
+      const { data: plan, error } = await client
+        .from("class_lesson_plans")
+        .select("class_id, semester_id")
+        .eq("id", planId)
+        .eq("owner_id", userId)
+        .maybeSingle();
+      if (error) throw toDataError(error);
+      if (!plan) throw toDataError({ code: "42501", message: "row-level security" });
+
+      const { data: siblings, error: listError } = await client
+        .from("class_lesson_plans")
+        .select("id, sort_order")
+        .eq("owner_id", userId)
+        .eq("class_id", plan.class_id)
+        .eq("semester_id", plan.semester_id)
+        .order("sort_order")
+        .order("created_at");
+      if (listError) throw toDataError(listError);
+
+      const order = siblings.map((p) => p.id);
+      const index = order.indexOf(planId);
+      const target = direction === "up" ? index - 1 : index + 1;
+      if (index < 0 || target < 0 || target >= order.length) return;
+      [order[index], order[target]] = [order[target], order[index]];
+
+      // Tulis ulang urutan 0..n-1 hanya untuk baris yang berubah.
+      for (const [i, id] of order.entries()) {
+        if (siblings.find((p) => p.id === id)?.sort_order === i) continue;
+        const { error: updateError } = await client
+          .from("class_lesson_plans")
+          .update({ sort_order: i })
+          .eq("id", id)
+          .eq("owner_id", userId);
+        if (updateError) throw toDataError(updateError);
+      }
+    },
+
+    async deleteLessonPlan(planId) {
+      const { data, error } = await client
+        .from("class_lesson_plans")
+        .delete()
+        .eq("id", planId)
+        .eq("owner_id", userId)
+        .select("id");
+      if (error) throw toDataError(error);
+      ensureAffected(data);
+    },
+
+    async saveMeeting({ target, status, lessonPlanId, actualDate, summary, notes }) {
+      const fields = {
+        status,
+        lesson_plan_id: lessonPlanId,
+        actual_date: status === "completed" ? actualDate : null,
+        summary,
+        notes,
+      };
+
+      if (target.kind === "record") {
+        const { data, error } = await client
+          .from("meeting_records")
+          .update(fields)
+          .eq("id", target.recordId)
+          .eq("owner_id", userId)
+          .select("id");
+        if (error) throw toDataError(error);
+        ensureAffected(data);
+        return target.recordId;
+      }
+
+      // Kejadian jadwal rutin: kelas, semester, tahun, dan jam diambil dari jadwal milik guru (RLS).
+      const { data: schedule, error: scheduleError } = await client
+        .from("weekly_schedules")
+        .select("id, academic_year_id, class_id, semester_id, start_time, end_time")
+        .eq("id", target.scheduleId)
+        .eq("owner_id", userId)
+        .maybeSingle();
+      if (scheduleError) throw toDataError(scheduleError);
+      if (!schedule) throw toDataError({ code: "42501", message: "row-level security" });
+
+      const { data, error } = await client
+        .from("meeting_records")
+        .upsert(
+          {
+            ...fields,
+            academic_year_id: schedule.academic_year_id,
+            class_id: schedule.class_id,
+            semester_id: schedule.semester_id,
+            weekly_schedule_id: schedule.id,
+            planned_date: target.date,
+            start_time: schedule.start_time,
+            end_time: schedule.end_time,
+          },
+          { onConflict: "weekly_schedule_id,planned_date" },
+        )
+        .select("id")
+        .single();
+      if (error) throw toDataError(error);
+      return data.id;
+    },
+
+    async createReplacement({ postponedRecordId, date, startTime, endTime }) {
+      const { data: original, error: readError } = await client
+        .from("meeting_records")
+        .select("academic_year_id, class_id, semester_id, lesson_plan_id")
+        .eq("id", postponedRecordId)
+        .eq("owner_id", userId)
+        .maybeSingle();
+      if (readError) throw toDataError(readError);
+      if (!original) throw toDataError({ code: "42501", message: "row-level security" });
+
+      const { error } = await client.from("meeting_records").insert({
+        academic_year_id: original.academic_year_id,
+        class_id: original.class_id,
+        semester_id: original.semester_id,
+        lesson_plan_id: original.lesson_plan_id,
+        replacement_for_id: postponedRecordId,
+        planned_date: date,
+        start_time: startTime,
+        end_time: endTime,
+      });
+      if (error) throw toDataError(error);
     },
 
     async getMaterialFileUrl(materialId) {

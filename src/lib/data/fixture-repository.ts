@@ -50,5 +50,9 @@ export function createFixtureRepository(scenario: DemoScenario = "lengkap"): Riv
     async listMeetingRecords(semesterId) {
       return copy(data.meetings.filter((m) => m.semesterId === semesterId));
     },
+    async listMeetingStatusEvents() {
+      // Data contoh tidak menyimpan histori status.
+      return [];
+    },
   };
 }
