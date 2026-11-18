@@ -40,7 +40,7 @@ export function MobileHeader() {
         }}
         className="m-0 h-dvh max-h-dvh w-[86vw] max-w-[320px] bg-transparent p-0 open:flex"
       >
-        <div className="flex h-full w-full flex-col bg-white px-5 pt-5 pb-6 shadow-[var(--shadow-pop)]">
+        <div className="flex h-full w-full flex-col overflow-y-auto overscroll-contain bg-white px-5 pt-5 pb-6 shadow-[var(--shadow-pop)]">
           <div className="mb-8 flex items-center justify-between">
             <Logo className="[&_svg]:h-8 [&_span>span:first-child]:text-2xl" />
             <button
@@ -53,7 +53,7 @@ export function MobileHeader() {
             </button>
           </div>
           <SidebarNav onNavigate={close} />
-          <div className="mt-auto pt-6">
+          <div className="mt-auto pt-6 [@media(max-height:560px)]:hidden">
             <StudioCard />
           </div>
         </div>
