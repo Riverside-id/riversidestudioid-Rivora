@@ -19,6 +19,14 @@ import {
  * bukan satu-satunya proteksi (PRD §9).
  *
  */
+/**
+ * PostgREST PGRST205 = tabel belum ada di database (migration Tahap 1 belum diterapkan). Pembacaan
+ * rencana/catatan dianggap kosong agar Beranda/Jadwal tetap tampil; penyimpanan tetap memberi pesan jelas.
+ */
+function isMissingTable(error: { code?: string } | null): boolean {
+  return error?.code === "PGRST205";
+}
+
 export function createSupabaseRepository(client: RivoraSupabaseClient, userId: string): RivoraRepository {
   return {
     source: "supabase",
@@ -93,6 +101,7 @@ export function createSupabaseRepository(client: RivoraSupabaseClient, userId: s
         .eq("semester_id", semesterId)
         .order("sort_order")
         .order("created_at");
+      if (isMissingTable(error)) return [];
       if (error) throw toDataError(error);
       return data.map(mapLessonPlan);
     },
@@ -105,6 +114,7 @@ export function createSupabaseRepository(client: RivoraSupabaseClient, userId: s
         .eq("semester_id", semesterId)
         .order("planned_date")
         .order("start_time");
+      if (isMissingTable(error)) return [];
       if (error) throw toDataError(error);
       return data.map(mapMeetingRecord);
     },
@@ -117,6 +127,7 @@ export function createSupabaseRepository(client: RivoraSupabaseClient, userId: s
         .eq("owner_id", userId)
         .in("meeting_id", meetingIds)
         .order("changed_at");
+      if (isMissingTable(error)) return [];
       if (error) throw toDataError(error);
       return data.map(mapMeetingStatusEvent);
     },

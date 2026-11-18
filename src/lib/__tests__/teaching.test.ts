@@ -76,3 +76,11 @@ describe("pesan error database Tahap 1", () => {
     expect(dbErrorMessage({ code: "RV006", message: "Rencana materi ini bukan untuk semester tersebut." })).toMatch(/semester/);
   });
 });
+
+describe("pengaman urutan deploy (migration belum diterapkan)", () => {
+  it("penyimpanan ke tabel yang belum ada memberi pesan jelas", () => {
+    expect(dbErrorMessage({ code: "PGRST205", message: "Could not find the table 'public.meeting_records' in the schema cache" })).toMatch(
+      /database belum diperbarui/,
+    );
+  });
+});
