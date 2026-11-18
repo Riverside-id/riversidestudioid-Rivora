@@ -19,7 +19,7 @@ export function MobileHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-line bg-white/90 px-4 backdrop-blur sm:px-6 lg:hidden">
+      <header className="sticky top-0 z-30 flex h-16 print:hidden items-center justify-between border-b border-line bg-white/90 px-4 backdrop-blur sm:px-6 lg:hidden">
         <Logo className="[&_svg]:h-8 [&_span>span:first-child]:text-2xl" />
         <button
           type="button"
