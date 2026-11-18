@@ -4,7 +4,6 @@ import {
   checkMaterialFile,
   MATERIAL_BUCKET,
   MATERIAL_FILE_TYPES,
-  MAX_MATERIAL_BYTES,
   materialStoragePath,
   opensInBrowser,
   parseOwnedStoragePath,
@@ -168,9 +167,9 @@ export function createSupabaseMutations(client: RivoraSupabaseClient, userId: st
       if (infoError || !info) throw toStorageError(infoError ?? { message: "not found" });
       const size = Number(info.size ?? 0);
       const contentType = (info.contentType ?? "").toLowerCase();
-      if (size <= 0 || size > MAX_MATERIAL_BYTES || contentType !== MATERIAL_FILE_TYPES[kind].mime) {
+      if (size <= 0 || contentType !== MATERIAL_FILE_TYPES[kind].mime) {
         await bucket.remove([path]);
-        throw new DataError("File tidak sesuai aturan (jenis atau ukuran). Unggah ulang file Anda.", "FILE");
+        throw new DataError("File tidak sesuai aturan (jenis file). Unggah ulang file Anda.", "FILE");
       }
 
       const { error } = await client.from("teaching_materials").insert({

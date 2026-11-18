@@ -85,7 +85,8 @@ export function UploadMaterialForm({ supabaseUrl, publishableKey }: { supabaseUr
         return;
       }
 
-      const body = await file.arrayBuffer();
+      // Blob bertipe eksplisit: file besar tidak perlu dibaca seluruhnya ke memori.
+      const body = new Blob([file], { type: ticket.contentType });
       const { error: uploadError } = await storage
         .from(MATERIAL_BUCKET)
         .uploadToSignedUrl(ticket.path, ticket.token, body, { contentType: ticket.contentType, upsert: false });
@@ -153,7 +154,7 @@ export function UploadMaterialForm({ supabaseUrl, publishableKey }: { supabaseUr
           ) : (
             <>
               <span className="font-semibold text-ink">Pilih atau tarik file ke sini</span>
-              <span className="text-sm text-ink-muted">PDF, Word (DOC/DOCX), atau PowerPoint (PPT/PPTX) · maks.&nbsp;10&nbsp;MB</span>
+              <span className="text-sm text-ink-muted">PDF, Word (DOC/DOCX), atau PowerPoint (PPT/PPTX)</span>
             </>
           )}
           <input

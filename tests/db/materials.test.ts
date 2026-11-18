@@ -45,14 +45,15 @@ describe("bank materi — tabel teaching_materials", () => {
     expect(n).toBeGreaterThanOrEqual(5);
   });
 
-  it("menolak file di folder guru lain, ekstensi ≠ jenis, dan ukuran > 10 MB", async () => {
+  it("menolak file di folder guru lain, ekstensi ≠ jenis, dan ukuran 0; file besar diterima", async () => {
     await expect(db.as(guruA, (q) => insertMaterial(q, { path: pathOf(guruB) }))).rejects.toThrow(/teaching_materials_file_path_owner/);
     await expect(db.as(guruA, (q) => insertMaterial(q, { path: pathOf(guruA, "docx"), kind: "pdf" }))).rejects.toThrow(
       /teaching_materials_file_path_owner/,
     );
-    await expect(db.as(guruA, (q) => insertMaterial(q, { path: pathOf(guruA), size: 10 * 1024 * 1024 + 1 }))).rejects.toThrow(
-      /teaching_materials_file_size_limit/,
+    await expect(db.as(guruA, (q) => insertMaterial(q, { path: pathOf(guruA), size: 0 }))).rejects.toThrow(
+      /teaching_materials_file_size_positive/,
     );
+    await db.as(guruA, (q) => insertMaterial(q, { path: pathOf(guruA), size: 300 * 1024 * 1024 }));
     await expect(db.as(guruA, (q) => insertMaterial(q, { path: `${guruA}/../rahasia.pdf` }))).rejects.toThrow(
       /teaching_materials_file_path_owner/,
     );
@@ -91,12 +92,12 @@ describe("bank materi — tabel teaching_materials", () => {
 });
 
 describe("bank materi — Storage bucket 'materi'", () => {
-  it("bucket privat, batas 10 MB, hanya PDF/Word/PowerPoint", async () => {
+  it("bucket privat, tanpa batas ukuran sendiri, hanya PDF/Word/PowerPoint", async () => {
     const { rows } = await db.admin.query<{ public: boolean; file_size_limit: string; allowed_mime_types: string[] }>(
       "select public, file_size_limit, allowed_mime_types from storage.buckets where id = 'materi'",
     );
     expect(rows[0].public).toBe(false);
-    expect(Number(rows[0].file_size_limit)).toBe(10 * 1024 * 1024);
+    expect(rows[0].file_size_limit).toBeNull();
     expect(rows[0].allowed_mime_types.sort()).toEqual(
       [
         "application/msword",

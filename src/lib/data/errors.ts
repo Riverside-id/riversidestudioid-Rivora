@@ -1,3 +1,5 @@
+import { FILE_TOO_LARGE_ERROR, FILE_TYPE_ERROR } from "@/lib/materials/file-rules";
+
 /**
  * Menerjemahkan error database/Auth menjadi pesan berbahasa Indonesia yang mudah dipahami guru.
  * Isi catatan/data pribadi tidak pernah dimasukkan ke pesan atau log.
@@ -54,7 +56,7 @@ export function dbErrorMessage(error: DbErrorLike): string {
   }
   if (text.includes("profiles_timezone_supported")) return "Zona waktu tidak didukung.";
   if (text.includes("profiles_display_name_length")) return "Nama panggilan harus 2–40 huruf.";
-  if (text.includes("teaching_materials_file_size_limit")) return "Ukuran file melebihi 10 MB.";
+  if (text.includes("teaching_materials_file_size_positive")) return "File kosong. Pilih file lain.";
   if (text.includes("teaching_materials_title_length")) return "Judul materi harus 2–120 karakter.";
   if (text.includes("teaching_materials_file_path") || text.includes("teaching_materials_file_shape")) {
     return "File materi tidak valid. Unggah ulang file Anda.";
@@ -82,10 +84,10 @@ export function storageErrorMessage(error: StorageErrorLike): string {
   const text = (error.message ?? "").toLowerCase();
   const status = Number(error.statusCode ?? error.status ?? 0);
   if (status === 413 || text.includes("maximum allowed size") || text.includes("too large")) {
-    return "Ukuran file melebihi 10 MB. Kecilkan atau pisahkan file, lalu coba lagi.";
+    return FILE_TOO_LARGE_ERROR;
   }
   if (status === 415 || text.includes("mime type") || text.includes("not supported")) {
-    return "Jenis file belum didukung. Unggah PDF, Word (DOC/DOCX), atau PowerPoint (PPT/PPTX).";
+    return FILE_TYPE_ERROR;
   }
   if (status === 403 || text.includes("row-level security") || text.includes("unauthorized")) {
     return "Anda tidak memiliki akses ke file ini.";
