@@ -41,7 +41,7 @@ Audit awal: 18 November 2026, `main` = `c35df4f` (Fase A, Fase B, Bank Materi un
 | # | Pekerjaan | Status | Catatan audit |
 |---|---|---|---|
 | 16 | Verifikasi upload materi asli | Sudah dibuat, belum teruji | PDF/DOC/DOCX/PPT/PPTX, bucket privat, signed URL; PGlite & jsdom lulus; test Cloud tertulis, belum jalan (secret key kosong); unggah di browser belum dikonfirmasi |
-| 17 | Materi catatan dan tautan | Sudah dibuat, belum teruji | Tambah Materi: File/Tautan/Catatan; tautan hanya http(s) (javascript:/data:/file: & kredensial ditolak di browser, server, DB); catatan di `/materi/[id]`. Migration `20261119300000` menunggu persetujuan |
+| 17 | Materi catatan dan tautan | Sudah dibuat, belum teruji | Tambah Materi: File/Tautan/Catatan; tautan hanya http(s) (javascript:/data:/file: & kredensial ditolak di browser, server, DB); catatan di `/materi/[id]`. Migration `20261119300000` sudah di Cloud |
 | 18 | Laporan mengajar | Sudah dibuat, belum teruji | `/progres/laporan`: filter tahun (termasuk arsip), semester/semua, kelas, rentang tanggal; ringkasan per kelas + daftar pertemuan dari data asli |
 | 19 | Ekspor PDF dan CSV | Sudah dibuat, belum teruji | CSV UTF-8 (BOM, `;`) per pertemuan & ringkasan kelas, aman CSV-injection, data diambil ulang di server (RLS); PDF lewat Cetak → Simpan sebagai PDF (tata letak cetak: kop guru, tahun, semester, tanggal ekspor) |
 
@@ -62,3 +62,4 @@ Audit awal: 18 November 2026, `main` = `c35df4f` (Fase A, Fase B, Bank Materi un
 - 18 Nov 2026 — Tahap 1 (#01–#08) dibuat; migration `20261119100000_fase_c_mengajar` menunggu persetujuan untuk Supabase Cloud.
 - 19 Nov 2026 — Migration Tahap 1 terverifikasi ada di Cloud (tabel ada, anon ditolak); PR #6 di `main`. Tahap 2 (#09–#15) dibuat di `feature/tahap-2-arsip`; migration `20261119200000_fase_d_tahun_ajaran` diterapkan ke Cloud (disetujui pemilik) dan terverifikasi.
 - 19 Nov 2026 — Tahap 3 (#17–#19) dibuat di `feature/tahap-3-laporan`; #16 masih menunggu secret key untuk test Storage Cloud; migration `20261119300000_materi_catatan_tautan` menunggu persetujuan.
+- 19 Nov 2026 — PR #9 di `main` (`9518bd1`); migration `20261119300000_materi_catatan_tautan` aktif di Cloud. Berikutnya Tahap 4 (#20–#25).
