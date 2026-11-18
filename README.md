@@ -222,10 +222,11 @@ Keputusan pemilik (18 Nov 2026): hosting memakai **Vercel** (menggantikan rencan
 | Repo | `Riverside-id/riversidestudioid-Rivora` (terhubung; push ke `main` = deploy production) |
 | Deploy preview | otomatis untuk branch lain/PR, dilindungi *Vercel Authentication* (hanya anggota tim) |
 
-Status production saat ini (commit `34d8918`, Fase A): halaman publik tampil; halaman aplikasi sengaja terkunci
-pengaman data demo karena tidak ada variabel environment — tidak ada angka contoh di domain publik.
+Status 18 Nov 2026: env **Preview** sudah diisi (mode supabase). Production menjalankan kode Fase B (dipromosikan
+lewat dashboard) tetapi env **Production** belum diisi, sehingga halaman aplikasi terkunci pengaman data demo
+("Halaman belum bisa dimuat") — tidak ada angka contoh di domain publik.
 
-Variabel environment (Vercel → Project → Settings → Environment Variables), setelah Fase B digabung dan Supabase siap:
+Variabel environment (Vercel → Project → Settings → Environment Variables):
 
 - **Production**: `RIVORA_DATA_SOURCE=supabase`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
   `NEXT_PUBLIC_SITE_URL=https://rivora-rust.vercel.app`. Jangan set `RIVORA_ALLOW_DEMO_DATA`.

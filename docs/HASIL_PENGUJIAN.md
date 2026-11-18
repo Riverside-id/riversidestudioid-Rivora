@@ -16,11 +16,22 @@ Catatan jujur per lingkungan. "Lulus di PGlite" **bukan** berarti lulus di Supab
 | Bundel SQL Editor: terapkan, catat riwayat, tolak run ulang secara atomik | PGlite | `tests/db/sql-editor-bundle.test.ts` | ✅ 3 skenario lulus |
 | **Migration Fase B diterapkan** (disetujui pemilik) | **Supabase Cloud** `efawovyrzkvgdphgkuuj` | bundel `npm run db:bundle` lewat SQL Editor | ✅ 18 Nov 2026 |
 | **Struktur di Cloud**: 2 tipe, 6 tabel RLS aktif, 17 policy, anon tanpa hak, trigger `on_auth_user_created`, 4 versi riwayat migration, akun lama dapat profil (1/1) | **Supabase Cloud** | `supabase/checks/cek_kondisi.sql` (baca-saja) | ✅ sesuai harapan, sama dengan PGlite |
-| **Auth + RLS dua akun lewat HTTP** | **Supabase Cloud** `efawovyrzkvgdphgkuuj` | `npm run test:integration` | ⏳ **belum dijalankan** — menunggu kunci API di `.env.test.local` |
+| Kunci publishable + Auth Cloud hidup | **Supabase Cloud** | `GET /auth/v1/health`, login akun tak dikenal | ✅ 200; login salah → `invalid_credentials` |
+| Pengunjung tanpa login (anon) lewat REST | **Supabase Cloud** | `GET/POST /rest/v1/<tabel>`, `POST /rest/v1/rpc/complete_onboarding` | ✅ 6 tabel + RPC ditolak `42501 permission denied` |
+| Build production mode supabase terhadap Cloud | lokal (`next start`) | `/dashboard`, `/jadwal`, `/onboarding`, `/pengaturan` | ✅ 307 → `/login`; `/login`, `/register` 200; route tak dikenal 404 |
+| **Auth + RLS dua akun lewat HTTP** | **Supabase Cloud** `efawovyrzkvgdphgkuuj` | `npm run test:integration` | ⏳ **belum dijalankan** — menunggu secret key di `.env.test.local` |
 | Database suite terhadap Postgres Cloud | Supabase Cloud | `npm run test:db:supabase` (butuh `RIVORA_TEST_DB_URL`) | ⏳ opsional, belum dijalankan |
 | Alur daftar/konfirmasi email/reset di browser | Supabase Cloud | manual | ⏳ belum — perlu konfigurasi Auth Cloud (Site URL, Redirect URLs) |
 
-### Hosting Vercel (production, commit `34d8918` / Fase A)
+### Hosting Vercel — status 18 Nov 2026 sore
+
+| Cek | Hasil |
+|---|---|
+| Env **Preview** (`RIVORA_DATA_SOURCE=supabase`, URL + publishable key Supabase) | ✅ diisi; Preview `rivora-hcystix4p` dideploy ulang & Ready (dilindungi Vercel Authentication) |
+| Deployment production `rivora-fi78zx991` (13.26 WIB, dipromosikan dari Preview Fase B lewat dashboard) | ⚠️ kode Fase B **tanpa env Production** → mode demo ditolak → "Halaman belum bisa dimuat" |
+| Env **Production** | ⏳ belum diisi — butuh izin pemilik (ditolak pengaman otomatis saat dicoba) |
+
+### Hosting Vercel (production awal, commit `34d8918` / Fase A)
 
 | Cek | Hasil |
 |---|---|
