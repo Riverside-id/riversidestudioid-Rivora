@@ -16,6 +16,7 @@ const FASE_C = "20261118200000";
 const TANPA_BATAS = "20261118210000";
 const MENGAJAR = "20261119100000";
 const TAHUN_AJARAN = "20261119200000";
+const CATATAN = "20261119300000";
 
 /** Bundel berisi migration SEBELUM versi tertentu (meniru kondisi Cloud pada saat itu). */
 function bundleBefore(version: string): string {
@@ -73,7 +74,7 @@ describe("bundel SQL Editor (Supabase Cloud tanpa CLI)", { timeout: 30_000 }, ()
     expect((await check(db)).I).toBe("bucket materi belum ada");
 
     const { sql, migrations } = buildSqlEditorBundle({ since: FASE_C });
-    expect(migrations.map((m) => m.version)).toEqual([FASE_C, TANPA_BATAS, MENGAJAR, TAHUN_AJARAN]);
+    expect(migrations.map((m) => m.version)).toEqual([FASE_C, TANPA_BATAS, MENGAJAR, TAHUN_AJARAN, CATATAN]);
     expect(sql).not.toMatch(/create table public\.profiles/);
 
     const shown = rowsToMap((await db.exec(sql)).at(-1)!.rows);
@@ -112,6 +113,7 @@ describe("bundel SQL Editor (Supabase Cloud tanpa CLI)", { timeout: 30_000 }, ()
     expect(shown.F).toBe("tidak ada");
 
     // Rollback darurat (urutan terbalik) mengembalikan kondisi sebelumnya; migration bisa diterapkan ulang.
+    await db.exec(readFileSync("supabase/rollback/materi_catatan_tautan_down.sql", "utf8"));
     await db.exec(readFileSync("supabase/rollback/fase_d_tahun_ajaran_down.sql", "utf8"));
     await db.exec(readFileSync("supabase/rollback/fase_c_mengajar_down.sql", "utf8"));
     expect(await check(db)).toEqual(before);
@@ -125,13 +127,29 @@ describe("bundel SQL Editor (Supabase Cloud tanpa CLI)", { timeout: 30_000 }, ()
     await db.exec(bundleBefore(TAHUN_AJARAN));
     const before = await check(db);
     const { sql, migrations } = buildSqlEditorBundle({ since: TAHUN_AJARAN });
-    expect(migrations).toEqual([{ version: TAHUN_AJARAN, name: "fase_d_tahun_ajaran" }]);
+    expect(migrations[0]).toEqual({ version: TAHUN_AJARAN, name: "fase_d_tahun_ajaran" });
     const shown = rowsToMap((await db.exec(sql)).at(-1)!.rows);
     expect(shown.C).toContain("activate_archived_year");
     expect(shown.C).toContain("start_new_academic_year");
     expect(shown.D).toBe(before.D);
     expect(shown.F).toBe("tidak ada");
+    await db.exec(readFileSync("supabase/rollback/materi_catatan_tautan_down.sql", "utf8"));
     await db.exec(readFileSync("supabase/rollback/fase_d_tahun_ajaran_down.sql", "utf8"));
+    expect(await check(db)).toEqual(before);
+    await db.close();
+  });
+
+  it("kondisi Cloud 19 Nov sore → catatan & tautan materi (`--since 20261119300000`), lalu rollback", async () => {
+    const db = await freshDatabase();
+    await db.exec(bundleBefore(CATATAN));
+    const before = await check(db);
+    const { sql, migrations } = buildSqlEditorBundle({ since: CATATAN });
+    expect(migrations).toEqual([{ version: CATATAN, name: "materi_catatan_tautan" }]);
+    const shown = rowsToMap((await db.exec(sql)).at(-1)!.rows);
+    expect(shown.G.split(", ")).toContain(`${CATATAN} materi_catatan_tautan`);
+    expect(shown.D).toBe(before.D);
+    expect(shown.F).toBe("tidak ada");
+    await db.exec(readFileSync("supabase/rollback/materi_catatan_tautan_down.sql", "utf8"));
     expect(await check(db)).toEqual(before);
     await db.close();
   });

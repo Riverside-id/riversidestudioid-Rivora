@@ -165,3 +165,34 @@ describe("bank materi — arsip & pulihkan", () => {
     expect(files).toHaveLength(1);
   });
 });
+
+describe("bank materi — catatan teks & tautan", () => {
+  const addLink = (uid: string, kind: string, url: string | null, body: string | null = null) =>
+    db.as(uid, (q) =>
+      q.query("insert into public.teaching_materials (title, kind, external_url, note_body) values ('Materi tautan', $1, $2, $3) returning id", [kind, url, body]),
+    );
+
+  it("tautan video & referensi http(s) dan catatan teks tersimpan", async () => {
+    await addLink(guruA, "video", "https://www.youtube.com/watch?v=abc123");
+    await addLink(guruA, "link", "http://contoh.sch.id/modul");
+    await addLink(guruA, "note", null, "Langkah pembelajaran:\n1. Apersepsi\n2. Latihan");
+    const kinds = await db.as(guruA, async (q) =>
+      (await q.query<{ kind: string }>("select kind from public.teaching_materials where kind in ('video','link','note') order by kind")).rows.map((r) => r.kind),
+    );
+    expect(kinds).toEqual(["link", "note", "video"]);
+  });
+
+  it("skema URL berbahaya dan bentuk yang salah ditolak", async () => {
+    await expect(addLink(guruA, "link", "javascript:alert(1)")).rejects.toThrow(/teaching_materials_url_shape/);
+    await expect(addLink(guruA, "video", "data:text/html,hi")).rejects.toThrow(/teaching_materials_url_shape/);
+    await expect(addLink(guruA, "link", `https://contoh.id/${"a".repeat(2000)}`)).rejects.toThrow(/teaching_materials_url_length/);
+    await expect(addLink(guruA, "note", null, null)).rejects.toThrow(/teaching_materials_note_shape/);
+    await expect(addLink(guruA, "note", "https://contoh.id", "isi")).rejects.toThrow(/teaching_materials_note_shape|teaching_materials_url_only_for_links/);
+    await expect(addLink(guruA, "link", "https://contoh.id", "isi")).rejects.toThrow(/teaching_materials_note_only_for_notes/);
+  });
+
+  it("guru lain tidak bisa membaca catatan atau tautan guru A", async () => {
+    const seen = await db.as(guruB, async (q) => (await q.query("select id from public.teaching_materials where kind in ('note','link','video')")).rows);
+    expect(seen).toEqual([]);
+  });
+});
