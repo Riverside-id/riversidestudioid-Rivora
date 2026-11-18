@@ -11,7 +11,10 @@ Catatan jujur per lingkungan. "Lulus di PGlite" **bukan** berarti lulus di Supab
 | Tabel `teaching_materials` + RLS dua guru + policy Storage (folder sendiri, tidak lintas akun, file terpakai tak bisa dihapus) + bucket privat 10 MB 5 tipe | **PGlite** + tiruan skema `storage` | `tests/db/materials.test.ts` | ✅ 10 skenario |
 | Bundel SQL Editor `--since` (hanya migration baru untuk Cloud yang sudah berisi Fase B) | PGlite | `tests/db/sql-editor-bundle.test.ts` | ✅ |
 | Tampilan Materi (kartu, Unduh/Buka PDF, form unggah desktop & ponsel, pesan mode demo) | lokal, browser | manual | ✅ desain Fase A dipertahankan |
-| **Storage asli**: unggah via signed URL, buka via signed URL, guru B & anon ditolak, bucket tolak tipe lain & > 10 MB, arsip menjaga file | **Supabase Cloud** | `tests/integration/supabase-storage.test.ts` | ⏳ **belum** — menunggu persetujuan migration + secret key |
+| **Migration `20261118200000_fase_c_materi` diterapkan** (disetujui pemilik) | **Supabase Cloud** | `npm run db:bundle -- --since 20261118200000` lewat SQL Editor | ✅ 18 Nov 2026 |
+| Tabel materi ada & anon ditolak lewat REST; bucket `materi` merespons | **Supabase Cloud** | `GET /rest/v1/teaching_materials` → `42501` (tabel fiktif → `PGRST205`) | ✅ |
+| **Storage asli**: unggah via signed URL, buka via signed URL, guru B & anon ditolak, bucket tolak tipe lain & > 10 MB, arsip menjaga file | **Supabase Cloud** | `tests/integration/supabase-storage.test.ts` | ⏳ **belum** — menunggu secret key di `.env.test.local` |
+| Unggah dari browser di Preview `rivora-git-feature-fase-c-materi-…` | Vercel Preview + Cloud | manual oleh pemilik | ⏳ belum dicoba |
 
 ## Fase B — status per 18 November 2026
 

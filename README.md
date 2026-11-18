@@ -18,7 +18,7 @@ materi, dan progres pelaksanaan pembelajaran per kelas, per semester, per tahun 
 |---|---|
 | A — Foundation & UI | Selesai, di `main` |
 | B — Auth & Data | Di `feature/fase-b` (PR ke `main`); migration **sudah diterapkan** ke Supabase Cloud (18 Nov 2026) |
-| C — Teaching Core | Sebagian di `feature/fase-c-materi`: Bank Materi unggah PDF/Word/PowerPoint (migration **belum diterapkan** ke Cloud) |
+| C — Teaching Core | Sebagian di `feature/fase-c-materi` (PR #2): Bank Materi unggah PDF/Word/PowerPoint; migration **sudah diterapkan** ke Cloud (18 Nov 2026) |
 | D — Periode & Arsip | Belum |
 | E — QA & Staging | Belum |
 
