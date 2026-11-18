@@ -8,12 +8,15 @@ Catatan jujur per lingkungan. "Lulus di PGlite" **bukan** berarti lulus di Supab
 |---|---|---|---|
 | Lint | lokal | `npm run lint` | ✅ bersih |
 | Typecheck | lokal | `npm run typecheck` | ✅ bersih |
-| Unit + komponen | lokal (Node/jsdom) | `npm test` | ✅ lulus (bagian dari 102 test) |
+| Unit + komponen | lokal (Node/jsdom) | `npm test` | ✅ lulus (bagian dari 105 test) |
 | Database: migration, RLS dua akun, constraint, trigger, RPC | **PGlite** (Postgres 17 WASM + tiruan skema `auth`, tanpa default privileges) | `npm test` / `npm run test:db` | ✅ 35 skenario lulus |
 | Rollback migration (migrate → rollback → migrate) | PGlite | skrip `supabase/rollback/fase_b_down.sql` | ✅ bersih |
 | Build production (mode fixture & mode supabase) | lokal | `npm run build` | ✅ |
 | Gerbang auth mode supabase tanpa server (proxy → /login, pesan koneksi) | lokal | manual di browser | ✅ |
-| **Auth + RLS dua akun lewat HTTP** | **Supabase Cloud** `efawovyrzkvgdphgkuuj` | `npm run test:integration` | ⏳ **belum dijalankan** — menunggu persetujuan migration remote + kunci uji |
+| Bundel SQL Editor: terapkan, catat riwayat, tolak run ulang secara atomik | PGlite | `tests/db/sql-editor-bundle.test.ts` | ✅ 3 skenario lulus |
+| **Migration Fase B diterapkan** (disetujui pemilik) | **Supabase Cloud** `efawovyrzkvgdphgkuuj` | bundel `npm run db:bundle` lewat SQL Editor | ✅ 18 Nov 2026 |
+| **Struktur di Cloud**: 2 tipe, 6 tabel RLS aktif, 17 policy, anon tanpa hak, trigger `on_auth_user_created`, 4 versi riwayat migration, akun lama dapat profil (1/1) | **Supabase Cloud** | `supabase/checks/cek_kondisi.sql` (baca-saja) | ✅ sesuai harapan, sama dengan PGlite |
+| **Auth + RLS dua akun lewat HTTP** | **Supabase Cloud** `efawovyrzkvgdphgkuuj` | `npm run test:integration` | ⏳ **belum dijalankan** — menunggu kunci API di `.env.test.local` |
 | Database suite terhadap Postgres Cloud | Supabase Cloud | `npm run test:db:supabase` (butuh `RIVORA_TEST_DB_URL`) | ⏳ opsional, belum dijalankan |
 | Alur daftar/konfirmasi email/reset di browser | Supabase Cloud | manual | ⏳ belum — perlu konfigurasi Auth Cloud (Site URL, Redirect URLs) |
 
