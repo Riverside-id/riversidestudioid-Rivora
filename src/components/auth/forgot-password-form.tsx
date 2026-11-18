@@ -1,40 +1,40 @@
 "use client";
 
 import { MailCheck } from "lucide-react";
-import { useState, type FormEvent } from "react";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { useActionState, useState, type FormEvent } from "react";
+import { forgotPasswordAction } from "@/app/(auth)/actions";
+import { ButtonLink } from "@/components/ui/button";
 import { Field, TextInput } from "@/components/ui/field";
+import { FormMessage } from "@/components/ui/form-message";
+import { SubmitButton } from "@/components/ui/submit-button";
+import { IDLE_STATE, valueOf } from "@/lib/validation/action-state";
 import { forgotPasswordSchema } from "@/lib/validation/auth";
 import { issuesToFieldErrors } from "@/lib/validation/onboarding";
 import { DemoAuthNote } from "./demo-auth-note";
 
-export function ForgotPasswordForm() {
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [sent, setSent] = useState(false);
+export function ForgotPasswordForm({ demo }: { demo: boolean }) {
+  const [state, formAction] = useActionState(forgotPasswordAction, IDLE_STATE);
+  const [clientErrors, setClientErrors] = useState<Record<string, string> | null>(null);
+  const errors = clientErrors ?? (state.status === "error" ? (state.fieldErrors ?? {}) : {});
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = new FormData(e.currentTarget);
-    const result = forgotPasswordSchema.safeParse({ email: String(form.get("email") ?? "") });
+    const result = forgotPasswordSchema.safeParse({ email: String(new FormData(e.currentTarget).get("email") ?? "") });
     if (!result.success) {
-      setErrors(issuesToFieldErrors(result.error));
+      e.preventDefault();
+      setClientErrors(issuesToFieldErrors(result.error));
       return;
     }
-    setErrors({});
-    setSent(true);
+    setClientErrors(null);
   }
 
-  if (sent) {
+  if (state.status === "success") {
     return (
       <div role="status" className="space-y-5">
         <div className="flex items-start gap-3 rounded-2xl bg-mint-soft p-4 text-mint-strong">
           <MailCheck aria-hidden className="mt-0.5 size-5 shrink-0" />
-          <p>
-            Jika email tersebut terdaftar, tautan untuk membuat kata sandi baru akan dikirim. Periksa juga
-            folder spam.
-          </p>
+          <p>{state.message}</p>
         </div>
-        <DemoAuthNote>Mode demo: tidak ada email yang benar-benar dikirim.</DemoAuthNote>
+        {demo ? <DemoAuthNote>Mode demo: tidak ada email yang benar-benar dikirim.</DemoAuthNote> : null}
         <ButtonLink href="/login" variant="secondary" className="w-full">
           Kembali ke halaman Masuk
         </ButtonLink>
@@ -43,13 +43,14 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-5">
+    <form action={formAction} onSubmit={onSubmit} noValidate className="space-y-5">
+      <FormMessage state={state} />
       <Field id="email" label="Email" error={errors.email}>
-        <TextInput id="email" type="email" autoComplete="email" inputMode="email" placeholder="nama@sekolah.sch.id" error={errors.email} />
+        <TextInput id="email" type="email" autoComplete="email" inputMode="email" placeholder="nama@sekolah.sch.id" defaultValue={valueOf(state, "email")} error={errors.email} />
       </Field>
-      <Button type="submit" size="lg" className="w-full">
+      <SubmitButton size="lg" className="w-full" pendingLabel="Mengirim…">
         Kirim Tautan Reset
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

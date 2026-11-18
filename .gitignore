@@ -45,3 +45,6 @@ next-env.d.ts
 
 # local screenshots scratch
 /.screenshots-tmp/
+
+# bundel SQL Editor (hasil generate, sumber tetap supabase/migrations)
+/supabase/cloud/

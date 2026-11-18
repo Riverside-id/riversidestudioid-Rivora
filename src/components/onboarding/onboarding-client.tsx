@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /** Wizard membaca draf dari localStorage → dirender hanya di browser agar tidak ada hydration mismatch. */
-export const OnboardingClient = dynamic(
+const Wizard = dynamic(
   () => import("./onboarding-wizard").then((m) => m.OnboardingWizard),
   {
     ssr: false,
@@ -19,3 +19,7 @@ export const OnboardingClient = dynamic(
     ),
   },
 );
+
+export function OnboardingClient(props: { demo: boolean; initialDisplayName: string }) {
+  return <Wizard {...props} />;
+}

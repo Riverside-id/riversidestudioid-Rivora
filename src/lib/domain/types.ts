@@ -17,6 +17,8 @@ export interface Profile {
   displayName: string;
   schoolName: string | null;
   timezone: string;
+  /** Kapan wizard pengaturan awal selesai; null = belum (arahkan ke /onboarding). */
+  onboardedAt: string | null;
 }
 
 export type AcademicYearStatus = "active" | "planned" | "archived";
@@ -57,6 +59,8 @@ export interface TeachingClass {
   section: string;
   /** Contoh `1A`. */
   displayName: string;
+  /** Kelas diarsipkan (bukan dihapus); null = aktif. */
+  archivedAt: string | null;
 }
 
 export interface WeeklySchedule {

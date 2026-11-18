@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Check, CircleCheck, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CircleCheck, LoaderCircle, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { completeOnboardingAction } from "@/app/onboarding/actions";
 import { DemoAuthNote } from "@/components/auth/demo-auth-note";
 import { Button } from "@/components/ui/button";
 import { Field, inputClass, TextInput } from "@/components/ui/field";
@@ -46,11 +47,11 @@ const STEPS: Array<{ n: Step; label: string }> = [
 ];
 const WEEKDAYS: Weekday[] = [1, 2, 3, 4, 5, 6];
 
-function initialDraft(): Draft {
+function initialDraft(initialDisplayName: string): Draft {
   const today = getZonedToday();
   const fallback: Draft = {
     step: 1,
-    displayName: "",
+    displayName: initialDisplayName,
     schoolName: "",
     academicYearLabel: defaultAcademicYearLabel(today),
     semesterNumber: defaultSemesterNumber(today),
@@ -61,7 +62,7 @@ function initialDraft(): Draft {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return fallback;
     const saved = JSON.parse(raw) as Partial<Draft>;
-    return { ...fallback, ...saved };
+    return { ...fallback, ...saved, displayName: saved.displayName || initialDisplayName };
   } catch {
     return fallback;
   }
@@ -69,13 +70,16 @@ function initialDraft(): Draft {
 
 /**
  * Wizard awal maksimal 4 langkah (F01): periode → kelas → jadwal → selesai.
- * Fase A: draf disimpan di perangkat (localStorage) agar bisa dilanjutkan; tidak dikirim ke server.
- * Fase B: setiap langkah disimpan ke Supabase lewat Server Action dengan validasi ulang di server.
+ * Draf disimpan di perangkat (localStorage) agar bisa dilanjutkan bila halaman tertutup.
+ * Langkah terakhir mengirim draf ke Server Action → divalidasi ulang → RPC complete_onboarding
+ * (satu transaksi). Mode demo: tidak ada yang disimpan ke server.
  */
-export function OnboardingWizard() {
+export function OnboardingWizard({ demo, initialDisplayName }: { demo: boolean; initialDisplayName: string }) {
   const router = useRouter();
-  const [draft, setDraft] = useState<Draft>(initialDraft);
+  const [draft, setDraft] = useState<Draft>(() => initialDraft(initialDisplayName));
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, startSaving] = useTransition();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -150,7 +154,23 @@ export function OnboardingWizard() {
 
   /* ---------------- langkah 4 ---------------- */
   function finish() {
-    router.push("/dashboard");
+    setSaveError(null);
+    startSaving(async () => {
+      const { step: _step, ...payload } = draft;
+      void _step;
+      const result = await completeOnboardingAction(payload);
+      if (!result.ok) {
+        setSaveError(result.message);
+        return;
+      }
+      try {
+        window.localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // abaikan
+      }
+      router.push("/dashboard");
+      router.refresh();
+    });
   }
 
   const sortedSchedules = draft.schedules
@@ -361,9 +381,21 @@ export function OnboardingWizard() {
               </div>
             ))}
           </dl>
-          <DemoAuthNote>
-            Mode demo: isian wizard baru tersimpan di perangkat ini, belum ke server. Beranda masih menampilkan data contoh.
-          </DemoAuthNote>
+          {demo ? (
+            <DemoAuthNote>
+              Mode demo: isian wizard tidak disimpan ke server. Beranda menampilkan data contoh.
+            </DemoAuthNote>
+          ) : (
+            <p className="text-sm text-ink-muted">
+              Tanggal tahun ajaran diisi otomatis (1 Juli – 30 Juni; Semester 1 Juli–Desember, Semester 2
+              Januari–Juni) dan bisa disesuaikan di Pengaturan.
+            </p>
+          )}
+          {saveError ? (
+            <p role="alert" className="rounded-xl bg-rose-soft px-3.5 py-2.5 text-[15px] text-rose-strong">
+              {saveError}
+            </p>
+          ) : null}
         </section>
       ) : null}
 
@@ -385,7 +417,17 @@ export function OnboardingWizard() {
             {draft.schedules.length > 0 ? "Lanjut" : "Lewati dulu"} <ArrowRight aria-hidden className="size-5" />
           </Button>
         ) : (
-          <Button size="lg" onClick={finish}>Masuk ke Beranda <ArrowRight aria-hidden className="size-5" /></Button>
+          <Button size="lg" onClick={finish} disabled={saving} aria-busy={saving}>
+            {saving ? (
+              <>
+                <LoaderCircle aria-hidden className="size-5 animate-spin" /> Menyimpan…
+              </>
+            ) : (
+              <>
+                {demo ? "Masuk ke Beranda" : "Simpan & Masuk ke Beranda"} <ArrowRight aria-hidden className="size-5" />
+              </>
+            )}
+          </Button>
         )}
       </div>
     </div>
