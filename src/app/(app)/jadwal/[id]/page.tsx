@@ -1,10 +1,11 @@
-import { ArrowLeft, BookOpen, CalendarClock, Download, ExternalLink, History } from "lucide-react";
+import { ArrowLeft, BookOpen, CalendarClock, History } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { sessionLessonText } from "@/components/dashboard/session-row";
 import { PageHeader } from "@/components/layout/page-header";
+import { MaterialOpenLink, materialOpenTarget } from "@/components/materi/material-open-link";
 import { MeetingStatusForm } from "@/components/sesi/meeting-status-form";
 import { buttonClass, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,7 +14,6 @@ import { PageSkeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatLongDate, formatShortDate, formatTimeRange } from "@/lib/date";
 import { MEETING_STATUS_LABEL, midtermSegmentLabel } from "@/lib/domain/labels";
-import { isMaterialFileKind, opensInBrowser } from "@/lib/materials/file-rules";
 import { getRequestContext } from "@/lib/server/request-context";
 import { getSessionPageData } from "@/lib/services/session-detail";
 
@@ -49,8 +49,6 @@ async function SessionContent({ params }: { params: Promise<{ id: string }> }) {
     : app.activeYear?.status === "archived"
       ? "Tahun ajaran ini diarsipkan (baca-saja)."
       : null;
-  const fileKind = material && isMaterialFileKind(material.kind) ? material.kind : null;
-  const inBrowser = fileKind ? opensInBrowser(fileKind) : false;
 
   return (
     <>
@@ -131,26 +129,16 @@ async function SessionContent({ params }: { params: Promise<{ id: string }> }) {
           ) : null}
 
           <div className="mt-6 space-y-4 border-t border-line pt-5">
-            {material ? (
-              fileKind && material.hasFile && !isDemo ? (
-                <a
-                  href={`/materi/${material.id}/berkas`}
-                  target={inBrowser ? "_blank" : undefined}
-                  rel={inBrowser ? "noopener noreferrer" : undefined}
-                  className={buttonClass("secondary")}
-                >
-                  {inBrowser ? <ExternalLink aria-hidden className="size-5" /> : <Download aria-hidden className="size-5" />}
-                  {inBrowser ? "Buka Materi (PDF)" : "Unduh Materi"}
-                </a>
-              ) : (
-                <span className={buttonClass("secondary", "md", "pointer-events-none opacity-55")} aria-disabled title={isDemo ? "Mode demo" : "Materi tanpa file"}>
-                  <BookOpen aria-hidden className="size-5" /> Buka Materi
-                </span>
-              )
+            {material && !isDemo && materialOpenTarget(material) ? (
+              <MaterialOpenLink material={material} size="md" />
+            ) : material ? (
+              <span className={buttonClass("secondary", "md", "pointer-events-none opacity-55")} aria-disabled title={isDemo ? "Mode demo" : "Materi tanpa isi"}>
+                <BookOpen aria-hidden className="size-5" /> Buka Materi
+              </span>
             ) : (
               <p className="text-sm text-ink-muted">
                 <BookOpen aria-hidden className="mr-1.5 inline size-4" />
-                Topik ini belum ditautkan ke file Bank Materi.
+                Topik ini belum ditautkan ke materi di Bank Materi.
               </p>
             )}
 

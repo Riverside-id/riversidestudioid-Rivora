@@ -129,6 +129,7 @@ export type Database = {
           file_size: number | null;
           mime_type: string | null;
           external_url: string | null;
+          note_body: string | null;
           archived_at: string | null;
         } & Timestamps;
         Insert: {
@@ -145,6 +146,7 @@ export type Database = {
           file_size?: number | null;
           mime_type?: string | null;
           external_url?: string | null;
+          note_body?: string | null;
           archived_at?: string | null;
           created_at?: string;
           updated_at?: string;

@@ -25,7 +25,15 @@ type Phase = "idle" | "uploading" | "saving";
  * Unggah materi dua langkah: (1) server memberi izin unggah sekali pakai, (2) browser mengirim file
  * langsung ke Supabase Storage, lalu (3) server menyimpan data materi setelah memeriksa file di Storage.
  */
-export function UploadMaterialForm({ supabaseUrl, publishableKey }: { supabaseUrl: string; publishableKey: string }) {
+export function UploadMaterialForm({
+  supabaseUrl,
+  publishableKey,
+  hideHeading = false,
+}: {
+  supabaseUrl: string;
+  publishableKey: string;
+  hideHeading?: boolean;
+}) {
   const formRef = useRef<HTMLFormElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
@@ -122,7 +130,7 @@ export function UploadMaterialForm({ supabaseUrl, publishableKey }: { supabaseUr
 
   return (
     <form ref={formRef} onSubmit={onSubmit} noValidate className="space-y-4">
-      <p className="pr-8 font-semibold text-ink">Tambah materi</p>
+      {hideHeading ? null : <p className="pr-8 font-semibold text-ink">Tambah materi</p>}
 
       <div className="space-y-1.5">
         <label

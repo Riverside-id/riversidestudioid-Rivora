@@ -2,8 +2,15 @@
 
 import { refresh } from "next/cache";
 import { errorState, getMutationContext } from "@/lib/server/mutation-context";
-import type { ActionState } from "@/lib/validation/action-state";
-import { createMaterialSchema, prepareUploadSchema, type CreateMaterialInput } from "@/lib/validation/materials";
+import { checkExternalUrl } from "@/lib/materials/link-rules";
+import { pickValues, withValues, type ActionState } from "@/lib/validation/action-state";
+import {
+  createLinkMaterialSchema,
+  createMaterialSchema,
+  createNoteMaterialSchema,
+  prepareUploadSchema,
+  type CreateMaterialInput,
+} from "@/lib/validation/materials";
 import { issuesToFieldErrors } from "@/lib/validation/onboarding";
 import { idSchema } from "@/lib/validation/settings";
 
@@ -77,4 +84,54 @@ export async function restoreMaterialAction(_prev: ActionState, form: FormData):
   }
   refresh();
   return { status: "success", message: "Materi dipulihkan ke Bank Materi." };
+}
+
+const fieldText = (form: FormData, key: string) => String(form.get(key) ?? "");
+const META_KEYS = ["title", "description", "topic", "gradeLevel"];
+
+export async function createLinkMaterialAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const values = pickValues(form, ["kind", "url", ...META_KEYS]);
+  const parsed = createLinkMaterialSchema.safeParse({
+    kind: fieldText(form, "kind"),
+    url: fieldText(form, "url"),
+    title: fieldText(form, "title"),
+    description: fieldText(form, "description"),
+    topic: fieldText(form, "topic"),
+    gradeLevel: fieldText(form, "gradeLevel"),
+  });
+  if (!parsed.success) return withValues({ status: "error", fieldErrors: issuesToFieldErrors(parsed.error) }, values);
+  const link = checkExternalUrl(parsed.data.url);
+  if (!link.ok) return withValues({ status: "error", fieldErrors: { url: link.message } }, values);
+
+  const ctx = await getMutationContext();
+  if (!ctx.ok) return withValues(ctx.state, values);
+  try {
+    await ctx.mutations.createLinkMaterial({ ...parsed.data, url: link.url });
+  } catch (error) {
+    return withValues(errorState(error), values);
+  }
+  refresh();
+  return { status: "success", message: `Tautan "${parsed.data.title}" tersimpan.` };
+}
+
+export async function createNoteMaterialAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const values = pickValues(form, ["body", ...META_KEYS]);
+  const parsed = createNoteMaterialSchema.safeParse({
+    body: fieldText(form, "body"),
+    title: fieldText(form, "title"),
+    description: fieldText(form, "description"),
+    topic: fieldText(form, "topic"),
+    gradeLevel: fieldText(form, "gradeLevel"),
+  });
+  if (!parsed.success) return withValues({ status: "error", fieldErrors: issuesToFieldErrors(parsed.error) }, values);
+
+  const ctx = await getMutationContext();
+  if (!ctx.ok) return withValues(ctx.state, values);
+  try {
+    await ctx.mutations.createNoteMaterial(parsed.data);
+  } catch (error) {
+    return withValues(errorState(error), values);
+  }
+  refresh();
+  return { status: "success", message: `Catatan "${parsed.data.title}" tersimpan.` };
 }

@@ -86,7 +86,13 @@ export function LessonPlanItem({
                 {plan.materialTitle}
               </a>
             ) : (
-              <p className="mt-1 text-sm text-ink-muted">Materi: {plan.materialTitle}</p>
+              <a
+                href={`/materi/${plan.materialId}`}
+                className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-strong underline-offset-2 hover:underline"
+              >
+                <ExternalLink aria-hidden className="size-4" />
+                {plan.materialTitle}
+              </a>
             )
           ) : null}
         </div>

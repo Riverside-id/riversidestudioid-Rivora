@@ -31,3 +31,33 @@ export const createMaterialSchema = z.object({
 });
 
 export type CreateMaterialInput = z.input<typeof createMaterialSchema>;
+
+const commonFields = {
+  title: z
+    .string()
+    .trim()
+    .min(2, { error: "Judul materi minimal 2 karakter." })
+    .max(120, { error: "Judul materi maksimal 120 karakter." }),
+  description: optionalText(500, "Deskripsi maksimal 500 karakter."),
+  topic: optionalText(80, "Topik maksimal 80 karakter."),
+  gradeLevel: z
+    .enum(["", "1", "2", "3", "4", "5", "6"], { error: "Pilih tingkat kelas 1–6." })
+    .transform((v) => (v === "" ? null : (Number(v) as 1 | 2 | 3 | 4 | 5 | 6))),
+};
+
+/** Tautan video / referensi (F05). URL dicek ulang dengan checkExternalUrl di server. */
+export const createLinkMaterialSchema = z.object({
+  kind: z.enum(["video", "link"], { error: "Pilih jenis tautan." }),
+  url: z.string().trim().min(1, { error: "Isi alamat tautan." }).max(2000, { error: "Tautan terlalu panjang." }),
+  ...commonFields,
+});
+
+/** Catatan teks (F05). */
+export const createNoteMaterialSchema = z.object({
+  body: z
+    .string()
+    .trim()
+    .min(1, { error: "Tulis isi catatan." })
+    .max(20000, { error: "Catatan maksimal 20.000 karakter." }),
+  ...commonFields,
+});
