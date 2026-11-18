@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+/*
+ * Rivora design tokens — PRD §8 + screenshot referensi (putih, biru pastel, mint, ungu lembut).
+ * Warna "*-strong" dipakai untuk teks agar kontras ≥ 4.5:1 di atas putih / latar lembut.
+ */
+@theme {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+
+  --color-navy: #10204a;
+  --color-ink: #10204a;
+  --color-ink-muted: #56637f;
+  --color-ink-subtle: #8a96b0;
+
+  --color-canvas: #f8fafe;
+  --color-card: #ffffff;
+  --color-line: #e3e9f4;
+  --color-line-strong: #8a97b3;
+
+  --color-primary: #4b73e6;
+  --color-primary-strong: #3457c6;
+  --color-primary-soft: #eaf0fd;
+  --color-primary-softer: #f4f7fe;
+
+  --color-mint: #20a68a;
+  --color-mint-strong: #12715e;
+  --color-mint-soft: #e6f8f2;
+
+  --color-violet: #7c52e0;
+  --color-violet-strong: #5f37c4;
+  --color-violet-soft: #f1ebfd;
+
+  --color-amber-strong: #a14a07;
+  --color-amber-soft: #fdf1e2;
+
+  --color-rose-strong: #b3123b;
+  --color-rose-soft: #fdecef;
+
+  --radius-card: 1.5rem;
+
+  --shadow-card: 0 1px 2px rgb(16 32 74 / 0.04), 0 10px 28px -14px rgb(16 32 74 / 0.12);
+  --shadow-pop: 0 2px 6px rgb(16 32 74 / 0.06), 0 18px 40px -16px rgb(16 32 74 / 0.22);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+  }
+
+  ::selection {
+    background-color: var(--color-primary-soft);
+  }
+
+  dialog::backdrop {
+    background: rgb(16 32 74 / 0.35);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@utility card {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}

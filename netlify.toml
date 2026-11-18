@@ -1,0 +1,9 @@
+# Konfigurasi build Netlify. Netlify mendeteksi Next.js otomatis (OpenNext adapter).
+# Variabel lingkungan (RIVORA_*, Supabase) diisi lewat UI Netlify per konteks — lihat README.
+# Belum pernah di-deploy: deploy preview menunggu persetujuan pemilik repository.
+
+[build]
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "22"
