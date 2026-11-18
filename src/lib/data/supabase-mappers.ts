@@ -1,5 +1,9 @@
 import type {
   AcademicYear,
+  ClassLessonPlan,
+  MeetingRecord,
+  MeetingStatus,
+  MeetingStatusEvent,
   GradeLevel,
   Profile,
   Semester,
@@ -80,6 +84,55 @@ export function mapTeachingMaterial(row: TableRow<"teaching_materials">): Teachi
     fileSize: row.file_size === null ? null : Number(row.file_size),
     externalUrl: row.external_url,
     createdAt: row.created_at,
+  };
+}
+
+const MEETING_STATUSES: readonly MeetingStatus[] = ["scheduled", "completed", "postponed", "cancelled"];
+
+function toMeetingStatus(value: string): MeetingStatus {
+  const status = MEETING_STATUSES.find((s) => s === value);
+  if (!status) throw new Error(`Status pertemuan tidak dikenal: ${value}`);
+  return status;
+}
+
+export function mapLessonPlan(row: TableRow<"class_lesson_plans">): ClassLessonPlan {
+  return {
+    id: row.id,
+    classId: row.class_id,
+    semesterId: row.semester_id,
+    materialId: row.material_id,
+    title: row.title,
+    sortOrder: row.sort_order,
+    plannedSessions: row.planned_sessions,
+    midtermSegment: row.midterm_segment === "before" || row.midterm_segment === "after" ? row.midterm_segment : null,
+  };
+}
+
+export function mapMeetingRecord(row: TableRow<"meeting_records">): MeetingRecord {
+  return {
+    id: row.id,
+    classId: row.class_id,
+    semesterId: row.semester_id,
+    weeklyScheduleId: row.weekly_schedule_id,
+    lessonPlanId: row.lesson_plan_id,
+    plannedDate: row.planned_date,
+    actualDate: row.actual_date,
+    startTime: toLocalTime(row.start_time),
+    endTime: toLocalTime(row.end_time),
+    status: toMeetingStatus(row.status),
+    summary: row.summary,
+    notes: row.notes,
+    replacementForId: row.replacement_for_id,
+  };
+}
+
+export function mapMeetingStatusEvent(row: TableRow<"meeting_status_events">): MeetingStatusEvent {
+  return {
+    id: row.id,
+    meetingId: row.meeting_id,
+    fromStatus: row.from_status === null ? null : toMeetingStatus(row.from_status),
+    toStatus: toMeetingStatus(row.to_status),
+    changedAt: row.changed_at,
   };
 }
 

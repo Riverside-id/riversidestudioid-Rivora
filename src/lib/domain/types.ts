@@ -125,7 +125,19 @@ export interface MeetingRecord {
   startTime: LocalTime | null;
   endTime: LocalTime | null;
   status: MeetingStatus;
+  /** Ringkasan pembelajaran (opsional). */
+  summary: string | null;
+  /** Kendala, alasan tunda/batal, atau catatan tambahan (opsional). */
   notes: string | null;
   /** Sesi pengganti menunjuk pertemuan yang ditunda, agar tidak terhitung ganda. */
   replacementForId: string | null;
+}
+
+/** Satu perubahan status pertemuan (ditulis database, baca-saja). */
+export interface MeetingStatusEvent {
+  id: string;
+  meetingId: string;
+  fromStatus: MeetingStatus | null;
+  toStatus: MeetingStatus;
+  changedAt: string;
 }

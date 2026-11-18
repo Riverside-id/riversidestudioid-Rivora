@@ -6,6 +6,9 @@ import {
   mapProfile,
   mapSemester,
   mapTeachingClass,
+  mapLessonPlan,
+  mapMeetingRecord,
+  mapMeetingStatusEvent,
   mapTeachingMaterial,
   mapWeeklySchedule,
 } from "./supabase-mappers";
@@ -15,9 +18,15 @@ import {
  * RLS adalah penjaga utama; filter owner_id di sini adalah lapisan tambahan (defense in depth),
  * bukan satu-satunya proteksi (PRD §9).
  *
- * Rencana materi dan catatan pelaksanaan baru dibuat tabelnya di Fase C — sampai saat itu
- * mengembalikan daftar kosong sehingga UI menampilkan empty state yang sudah ada.
  */
+/**
+ * PostgREST PGRST205 = tabel belum ada di database (migration Tahap 1 belum diterapkan). Pembacaan
+ * rencana/catatan dianggap kosong agar Beranda/Jadwal tetap tampil; penyimpanan tetap memberi pesan jelas.
+ */
+function isMissingTable(error: { code?: string } | null): boolean {
+  return error?.code === "PGRST205";
+}
+
 export function createSupabaseRepository(client: RivoraSupabaseClient, userId: string): RivoraRepository {
   return {
     source: "supabase",
@@ -84,11 +93,43 @@ export function createSupabaseRepository(client: RivoraSupabaseClient, userId: s
       if (error) throw toDataError(error);
       return data.map(mapTeachingMaterial);
     },
-    async listLessonPlans() {
-      return [];
+    async listLessonPlans(semesterId) {
+      const { data, error } = await client
+        .from("class_lesson_plans")
+        .select("*")
+        .eq("owner_id", userId)
+        .eq("semester_id", semesterId)
+        .order("sort_order")
+        .order("created_at");
+      if (isMissingTable(error)) return [];
+      if (error) throw toDataError(error);
+      return data.map(mapLessonPlan);
     },
-    async listMeetingRecords() {
-      return [];
+
+    async listMeetingRecords(semesterId) {
+      const { data, error } = await client
+        .from("meeting_records")
+        .select("*")
+        .eq("owner_id", userId)
+        .eq("semester_id", semesterId)
+        .order("planned_date")
+        .order("start_time");
+      if (isMissingTable(error)) return [];
+      if (error) throw toDataError(error);
+      return data.map(mapMeetingRecord);
+    },
+
+    async listMeetingStatusEvents(meetingIds) {
+      if (meetingIds.length === 0) return [];
+      const { data, error } = await client
+        .from("meeting_status_events")
+        .select("*")
+        .eq("owner_id", userId)
+        .in("meeting_id", meetingIds)
+        .order("changed_at");
+      if (isMissingTable(error)) return [];
+      if (error) throw toDataError(error);
+      return data.map(mapMeetingStatusEvent);
     },
   };
 }

@@ -1,8 +1,9 @@
-import { ChartColumn, Users } from "lucide-react";
+import { ChartColumn, ClipboardList, Users } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ClassProgressList } from "@/components/dashboard/class-progress-list";
 import { PageHeader } from "@/components/layout/page-header";
+import { ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageSkeleton } from "@/components/ui/skeleton";
@@ -51,9 +52,14 @@ async function ProgresContent() {
         <div className="grid gap-5 lg:grid-cols-2">
           {classes.map((c) => (
             <Card key={c.classId} as="article" aria-labelledby={`kelas-${c.classId}`}>
-              <h2 id={`kelas-${c.classId}`} className="text-xl font-bold text-ink">
-                Kelas {c.classLabel}
-              </h2>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 id={`kelas-${c.classId}`} className="text-xl font-bold text-ink">
+                  Kelas {c.classLabel}
+                </h2>
+                <ButtonLink href={`/progres/${c.classId}`} variant="secondary" size="sm">
+                  <ClipboardList aria-hidden className="size-4" /> Kelola rencana
+                </ButtonLink>
+              </div>
               <p className="mb-4 text-sm text-ink-muted">
                 {c.progress.kind === "planned"
                   ? `${c.progress.completed} dari ${c.progress.planned} pertemuan selesai (${c.progress.percent}%)`
@@ -91,7 +97,7 @@ async function ProgresContent() {
                 <EmptyState
                   icon={ChartColumn}
                   title="Belum ada rencana materi"
-                  description="Rencana materi per kelas dibuat pada Fase C."
+                  description="Tekan Kelola rencana untuk menambah topik dan jumlah pertemuan."
                   className="py-6"
                 />
               )}

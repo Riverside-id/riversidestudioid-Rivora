@@ -2,6 +2,18 @@
 
 Catatan jujur per lingkungan. "Lulus di PGlite" **bukan** berarti lulus di Supabase asli.
 
+## Tahap 1 Fitur Mengajar (#01–#08) — 18 November 2026
+
+| Lapisan | Lingkungan | Perintah | Hasil |
+|---|---|---|---|
+| Rencana, catatan, pengganti, histori status, RLS dua guru, arsip baca-saja, edit kelas | **PGlite** | `tests/db/teaching.test.ts` | ✅ 17 skenario |
+| Transisi Cloud → migration Tahap 1, lalu rollback darurat & terapkan ulang | PGlite | `tests/db/sql-editor-bundle.test.ts` | ✅ |
+| Validasi rencana/catatan/pengganti/edit kelas, pesan error | lokal | `src/lib/__tests__/teaching.test.ts` | ✅ 6 test |
+| Form status pertemuan (Selesai/Tunda+pengganti/Batal/kembalikan) | jsdom | `src/components/__tests__/meeting-status-form.test.tsx` | ✅ 4 test |
+| Tampilan Rencana Kelas, form ubah topik, detail sesi (desktop & ponsel) | lokal, browser (data contoh) | manual | ✅ desain dipertahankan |
+| **Migration `20261119100000_fase_c_mengajar`** | **Supabase Cloud** | SQL Editor | ⏳ menunggu persetujuan |
+| Alur nyata: buat rencana → Tandai Selesai → progres → Tunda + pengganti | Vercel Preview + Cloud | manual | ⏳ setelah migration |
+
 ## Fase C (sebagian): Bank Materi — unggah PDF/Word/PowerPoint, 18 November 2026
 
 | Lapisan | Lingkungan | Perintah | Hasil |

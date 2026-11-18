@@ -2,6 +2,7 @@ import type {
   AcademicYear,
   ClassLessonPlan,
   MeetingRecord,
+  MeetingStatusEvent,
   Profile,
   Semester,
   TeachingClass,
@@ -29,6 +30,8 @@ export interface RivoraRepository {
   listMaterials(): Promise<TeachingMaterial[]>;
   listLessonPlans(semesterId: string): Promise<ClassLessonPlan[]>;
   listMeetingRecords(semesterId: string): Promise<MeetingRecord[]>;
+  /** Histori perubahan status untuk pertemuan tertentu (urut waktu). */
+  listMeetingStatusEvents(meetingIds: string[]): Promise<MeetingStatusEvent[]>;
 }
 
 export type DataSource = "fixture" | "supabase";

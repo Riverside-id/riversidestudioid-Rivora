@@ -25,6 +25,7 @@ function meeting(
     startTime: null,
     endTime: null,
     status,
+    summary: null,
     notes: null,
     replacementForId: null,
     ...extra,

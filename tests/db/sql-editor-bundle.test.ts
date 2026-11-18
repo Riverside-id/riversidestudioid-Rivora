@@ -14,6 +14,7 @@ import { buildSqlEditorBundle } from "../../scripts/bundle-migrations.mjs";
 const CHECK_SQL = readFileSync("supabase/checks/cek_kondisi.sql", "utf8");
 const FASE_C = "20261118200000";
 const TANPA_BATAS = "20261118210000";
+const MENGAJAR = "20261119100000";
 
 /** Bundel berisi migration SEBELUM versi tertentu (meniru kondisi Cloud pada saat itu). */
 function bundleBefore(version: string): string {
@@ -51,10 +52,11 @@ describe("bundel SQL Editor (Supabase Cloud tanpa CLI)", { timeout: 30_000 }, ()
 
     expect(shown.A).toBe("academic_year_status, timerange");
     expect(shown.B).toBe(
-      "academic_years (RLS aktif), profiles (RLS aktif), semesters (RLS aktif), subjects (RLS aktif), " +
+      "academic_years (RLS aktif), class_lesson_plans (RLS aktif), meeting_records (RLS aktif), " +
+        "meeting_status_events (RLS aktif), profiles (RLS aktif), semesters (RLS aktif), subjects (RLS aktif), " +
         "teaching_classes (RLS aktif), teaching_materials (RLS aktif), weekly_schedules (RLS aktif)",
     );
-    expect(shown.D).toBe("20");
+    expect(shown.D).toBe("28");
     expect(shown.E).toBe("on_auth_user_created");
     expect(shown.F).toBe("tidak ada");
     expect(shown.G).toBe(migrations.map((m) => `${m.version} ${m.name}`).join(", "));
@@ -70,7 +72,7 @@ describe("bundel SQL Editor (Supabase Cloud tanpa CLI)", { timeout: 30_000 }, ()
     expect((await check(db)).I).toBe("bucket materi belum ada");
 
     const { sql, migrations } = buildSqlEditorBundle({ since: FASE_C });
-    expect(migrations.map((m) => m.version)).toEqual([FASE_C, TANPA_BATAS]);
+    expect(migrations.map((m) => m.version)).toEqual([FASE_C, TANPA_BATAS, MENGAJAR]);
     expect(sql).not.toMatch(/create table public\.profiles/);
 
     const shown = rowsToMap((await db.exec(sql)).at(-1)!.rows);
@@ -86,11 +88,33 @@ describe("bundel SQL Editor (Supabase Cloud tanpa CLI)", { timeout: 30_000 }, ()
     expect((await check(db)).I).toBe("privat, batas 10 MB, 5 tipe file, 3 policy");
 
     const { sql, migrations } = buildSqlEditorBundle({ since: TANPA_BATAS });
-    expect(migrations).toEqual([{ version: TANPA_BATAS, name: "materi_tanpa_batas_ukuran" }]);
+    expect(migrations[0]).toEqual({ version: TANPA_BATAS, name: "materi_tanpa_batas_ukuran" });
     const shown = rowsToMap((await db.exec(sql)).at(-1)!.rows);
     expect(shown.I).toBe("privat, tanpa batas bucket, 5 tipe file, 3 policy");
     expect(shown.G.split(", ")).toContain(`${TANPA_BATAS} materi_tanpa_batas_ukuran`);
-    expect(shown.D).toBe("20");
+    await db.close();
+  });
+
+  it("kondisi Cloud 18 Nov sore → Tahap 1 Mengajar (`--since 20261119100000`), lalu rollback darurat", async () => {
+    const db = await freshDatabase();
+    await db.exec(bundleBefore(MENGAJAR));
+    const before = await check(db);
+    expect(before.D).toBe("20");
+
+    const { sql, migrations } = buildSqlEditorBundle({ since: MENGAJAR });
+    expect(migrations).toEqual([{ version: MENGAJAR, name: "fase_c_mengajar" }]);
+    const shown = rowsToMap((await db.exec(sql)).at(-1)!.rows);
+    expect(shown.B).toContain("class_lesson_plans (RLS aktif)");
+    expect(shown.B).toContain("meeting_records (RLS aktif)");
+    expect(shown.B).toContain("meeting_status_events (RLS aktif)");
+    expect(shown.D).toBe("28");
+    expect(shown.F).toBe("tidak ada");
+
+    // Rollback darurat mengembalikan kondisi sebelumnya; migration bisa diterapkan ulang.
+    await db.exec(readFileSync("supabase/rollback/fase_c_mengajar_down.sql", "utf8"));
+    expect(await check(db)).toEqual(before);
+    const again = rowsToMap((await db.exec(sql)).at(-1)!.rows);
+    expect(again.D).toBe("28");
     await db.close();
   });
 
