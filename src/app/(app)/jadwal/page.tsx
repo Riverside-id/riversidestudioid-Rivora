@@ -9,6 +9,7 @@ import { EditClassDialog } from "@/components/jadwal/edit-class-dialog";
 import { InlineAddPanel } from "@/components/jadwal/inline-add-panel";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardHeader } from "@/components/ui/card";
+import { ActionButton } from "@/components/ui/action-button";
 import { ConfirmAction } from "@/components/ui/confirm-action";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PhaseNote } from "@/components/ui/phase-note";
@@ -20,7 +21,7 @@ import { getRequestContext } from "@/lib/server/request-context";
 import { getWeeklyOverview } from "@/lib/services/schedule";
 import { loadSemesterData } from "@/lib/services/semester-data";
 import { buildSessionsForDate } from "@/lib/services/sessions";
-import { archiveClassAction, deleteScheduleAction } from "./actions";
+import { archiveClassAction, deleteScheduleAction, restoreClassAction } from "./actions";
 
 export const metadata: Metadata = { title: "Jadwal" };
 
@@ -34,7 +35,11 @@ export default function JadwalPage() {
 
 async function JadwalContent() {
   const { repo, app, today, isDemo } = await getRequestContext();
-  const weekly = await getWeeklyOverview(repo, app);
+  const [weekly, allClasses] = await Promise.all([
+    getWeeklyOverview(repo, app),
+    app.activeYear ? repo.listClasses(app.activeYear.id, { includeArchived: true }) : Promise.resolve([]),
+  ]);
+  const archivedClasses = allClasses.filter((c) => c.archivedAt !== null);
   const todaySessions =
     app.activeYear && app.selectedSemester && isDateInSemester(app.selectedSemester, today)
       ? buildSessionsForDate(today, await loadSemesterData(repo, app.activeYear, app.selectedSemester))
@@ -211,6 +216,39 @@ async function JadwalContent() {
               ) : null}
             </div>
           )}
+
+          {archivedClasses.length > 0 ? (
+            <details className="mt-5 border-t border-line pt-4">
+              <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold text-ink [&::-webkit-details-marker]:hidden">
+                <Archive aria-hidden className="size-5 text-ink-muted" />
+                Kelas Diarsipkan ({archivedClasses.length})
+                <span className="ml-auto text-sm text-primary-strong">Lihat</span>
+              </summary>
+              <p className="mt-2 text-sm text-ink-muted">
+                Jadwal, rencana, dan catatan pertemuannya tetap tersimpan. Buka riwayat atau pulihkan kelas.
+              </p>
+              <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {archivedClasses.map((c) => (
+                  <li key={c.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-dashed border-line p-3.5">
+                    <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary-softer text-base font-extrabold text-ink-muted">
+                      {c.displayName}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-ink">Kelas {c.displayName}</p>
+                      <Link href={`/progres/${c.id}`} className="text-sm font-semibold text-primary-strong underline-offset-2 hover:underline">
+                        Lihat riwayat
+                      </Link>
+                    </div>
+                    {canEdit ? (
+                      <ActionButton action={restoreClassAction} fields={{ classId: c.id }} label={`Pulihkan Kelas ${c.displayName}`}>
+                        Pulihkan
+                      </ActionButton>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
         </Card>
       </div>
     </>

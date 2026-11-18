@@ -58,15 +58,14 @@ export function createSupabaseRepository(client: RivoraSupabaseClient, userId: s
       return data.map(mapSemester);
     },
 
-    async listClasses(academicYearId) {
-      const { data, error } = await client
+    async listClasses(academicYearId, options) {
+      let query = client
         .from("teaching_classes")
         .select("*")
         .eq("owner_id", userId)
-        .eq("academic_year_id", academicYearId)
-        .is("archived_at", null)
-        .order("grade_level")
-        .order("section");
+        .eq("academic_year_id", academicYearId);
+      if (!options?.includeArchived) query = query.is("archived_at", null);
+      const { data, error } = await query.order("grade_level").order("section");
       if (error) throw toDataError(error);
       return data.map(mapTeachingClass);
     },
@@ -93,6 +92,17 @@ export function createSupabaseRepository(client: RivoraSupabaseClient, userId: s
       if (error) throw toDataError(error);
       return data.map(mapTeachingMaterial);
     },
+    async listArchivedMaterials() {
+      const { data, error } = await client
+        .from("teaching_materials")
+        .select("*")
+        .eq("owner_id", userId)
+        .not("archived_at", "is", null)
+        .order("archived_at", { ascending: false });
+      if (error) throw toDataError(error);
+      return data.map(mapTeachingMaterial);
+    },
+
     async listLessonPlans(semesterId) {
       const { data, error } = await client
         .from("class_lesson_plans")

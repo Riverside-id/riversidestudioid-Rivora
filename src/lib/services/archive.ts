@@ -17,7 +17,7 @@ export async function getArchiveOverview(repo: RivoraRepository): Promise<Archiv
     years.map(async (year) => {
       const [semesters, classes] = await Promise.all([
         repo.listSemesters(year.id),
-        repo.listClasses(year.id),
+        repo.listClasses(year.id, { includeArchived: true }),
       ]);
       const perSemester = await Promise.all(
         semesters.map(async (s) => {

@@ -64,3 +64,17 @@ export async function archiveMaterialAction(_prev: ActionState, form: FormData):
   refresh();
   return { status: "success", message: "Materi dipindahkan ke arsip. File tetap tersimpan." };
 }
+
+export async function restoreMaterialAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const parsed = idSchema.safeParse(String(form.get("materialId") ?? ""));
+  if (!parsed.success) return { status: "error", message: "Materi tidak valid." };
+  const ctx = await getMutationContext();
+  if (!ctx.ok) return ctx.state;
+  try {
+    await ctx.mutations.restoreMaterial(parsed.data);
+  } catch (error) {
+    return errorState(error);
+  }
+  refresh();
+  return { status: "success", message: "Materi dipulihkan ke Bank Materi." };
+}

@@ -35,18 +35,24 @@ async function ClassPlanContent({ params }: { params: Promise<{ classId: string 
   const page = await getClassPlanPage(repo, app, decodeURIComponent(classId));
   if (!page) notFound();
 
-  const { cls, plans, progress, next, materials, history } = page;
+  const { cls, archived, plans, progress, next, materials, history } = page;
   const semester = app.selectedSemester ? semesterLabel(app.selectedSemester.number) : "";
   const lockedReason = isDemo
     ? "Mode demo: rencana contoh tidak bisa diubah."
-    : app.activeYear?.status === "archived"
-      ? "Tahun ajaran ini diarsipkan (baca-saja)."
-      : undefined;
+    : archived
+      ? "Kelas ini diarsipkan: riwayat bisa dibaca. Pulihkan lewat Jadwal → Kelas Diarsipkan untuk mengubah rencana."
+      : app.activeYear?.status === "archived"
+        ? "Tahun ajaran ini diarsipkan (baca-saja)."
+        : undefined;
   const canEdit = !lockedReason;
 
   return (
     <>
-      <PageHeader ctx={app} title={`Rencana Kelas ${cls.displayName}`} subtitle={`Matematika · ${semester}`} />
+      <PageHeader
+        ctx={app}
+        title={`Rencana Kelas ${cls.displayName}`}
+        subtitle={`Matematika · ${semester}${archived ? " · diarsipkan" : ""}`}
+      />
       <div className="max-w-4xl space-y-5">
         <ButtonLink href="/progres" variant="ghost" size="sm" className="-ml-2">
           <ArrowLeft aria-hidden className="size-4" /> Kembali ke Progres

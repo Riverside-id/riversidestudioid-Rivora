@@ -1,6 +1,7 @@
 import { Archive, BookOpen, Download, ExternalLink, FileText, Link2, Presentation, StickyNote, Video } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { ArchivedMaterials, type ArchivedMaterialItem } from "@/components/arsip/archived-materials";
 import { InlineAddPanel } from "@/components/jadwal/inline-add-panel";
 import { PageHeader } from "@/components/layout/page-header";
 import { UploadMaterialForm } from "@/components/materi/upload-material-form";
@@ -20,6 +21,8 @@ import { readSupabaseEnv } from "@/lib/supabase/env";
 import { archiveMaterialAction } from "./actions";
 
 export const metadata: Metadata = { title: "Materi" };
+
+const ARCHIVED_ON = new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Jakarta" });
 
 const KIND_ICON: Record<MaterialKind, typeof FileText> = {
   pdf: FileText,
@@ -49,7 +52,17 @@ export default function MateriPage({ searchParams }: PageProps<"/materi">) {
 
 async function MateriContent({ searchParams }: { searchParams: PageProps<"/materi">["searchParams"] }) {
   const [{ repo, app, isDemo }, params] = await Promise.all([getRequestContext(), searchParams]);
-  const materials = await getMaterialsOverview(repo, app);
+  const [materials, archivedMaterials] = await Promise.all([getMaterialsOverview(repo, app), repo.listArchivedMaterials()]);
+  const archived: ArchivedMaterialItem[] = archivedMaterials.map((m) => ({
+    id: m.id,
+    title: m.title,
+    kind: m.kind,
+    topic: m.topic,
+    gradeLevel: m.gradeLevel,
+    fileSize: m.fileSize,
+    hasFile: Boolean(m.filePath),
+    archivedOn: m.archivedAt ? ARCHIVED_ON.format(new Date(m.archivedAt)) : "",
+  }));
   const supabaseEnv = isDemo ? null : readSupabaseEnv();
   const canEdit = Boolean(supabaseEnv);
   const notice = typeof params.berkas === "string" ? FILE_NOTICE[params.berkas] : undefined;
@@ -162,6 +175,24 @@ async function MateriContent({ searchParams }: { searchParams: PageProps<"/mater
             description="Unggah PDF, Word (DOC/DOCX), atau PowerPoint (PPT/PPTX)."
           />
         )}
+
+        {archived.length > 0 ? (
+          <Card aria-labelledby="materi-arsip">
+            <details>
+              <summary className="flex cursor-pointer list-none items-center gap-2 text-lg font-bold text-ink [&::-webkit-details-marker]:hidden">
+                <Archive aria-hidden className="size-5 text-ink-muted" />
+                <span id="materi-arsip">Materi Diarsipkan ({archived.length})</span>
+                <span className="ml-auto text-sm font-semibold text-primary-strong">Lihat</span>
+              </summary>
+              <p className="mt-2 text-sm text-ink-muted">
+                File tetap tersimpan dan bisa dibuka. Pulihkan untuk menampilkannya lagi di Bank Materi.
+              </p>
+              <div className="mt-4">
+                <ArchivedMaterials items={archived} canRestore={canEdit} />
+              </div>
+            </details>
+          </Card>
+        ) : null}
       </div>
     </>
   );

@@ -51,6 +51,8 @@ export interface RivoraMutations {
     gradeLevel: GradeLevel | null;
   }): Promise<void>;
   archiveMaterial(materialId: string): Promise<void>;
+  restoreMaterial(materialId: string): Promise<void>;
+  restoreClass(classId: string): Promise<void>;
   /** Signed URL berdurasi pendek: PDF dibuka di browser, Word/PowerPoint diunduh. */
   getMaterialFileUrl(materialId: string): Promise<string>;
 
@@ -409,6 +411,30 @@ export function createSupabaseMutations(client: RivoraSupabaseClient, userId: st
         end_time: endTime,
       });
       if (error) throw toDataError(error);
+    },
+
+    async restoreMaterial(materialId) {
+      const { data, error } = await client
+        .from("teaching_materials")
+        .update({ archived_at: null })
+        .eq("id", materialId)
+        .eq("owner_id", userId)
+        .not("archived_at", "is", null)
+        .select("id");
+      if (error) throw toDataError(error);
+      ensureAffected(data);
+    },
+
+    async restoreClass(classId) {
+      const { data, error } = await client
+        .from("teaching_classes")
+        .update({ archived_at: null })
+        .eq("id", classId)
+        .eq("owner_id", userId)
+        .not("archived_at", "is", null)
+        .select("id");
+      if (error) throw toDataError(error);
+      ensureAffected(data);
     },
 
     async getMaterialFileUrl(materialId) {

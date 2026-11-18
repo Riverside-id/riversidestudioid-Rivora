@@ -96,6 +96,8 @@ export interface TeachingMaterial {
   fileSize: number | null;
   externalUrl: string | null;
   createdAt: string;
+  /** Diisi saat materi diarsipkan (file tetap di Storage). */
+  archivedAt: string | null;
 }
 
 export type MidtermSegment = "before" | "after";

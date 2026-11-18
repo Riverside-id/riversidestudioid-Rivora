@@ -144,3 +144,24 @@ describe("bank materi — Storage bucket 'materi'", () => {
     expect(deletedByB).toEqual([]);
   });
 });
+
+describe("bank materi — arsip & pulihkan", () => {
+  it("materi diarsipkan bisa dipulihkan pemiliknya; guru lain tidak bisa; file tetap ada", async () => {
+    const path = pathOf(guruA);
+    const id = await db.as(guruA, async (q) => {
+      await putObject(q, path);
+      return insertMaterial(q, { path, title: "Arsip lalu pulihkan" });
+    });
+    await db.as(guruA, (q) => q.query("update public.teaching_materials set archived_at = now() where id = $1", [id]));
+    const byB = await db.as(guruB, async (q) =>
+      (await q.query("update public.teaching_materials set archived_at = null where id = $1 returning id", [id])).rows,
+    );
+    expect(byB).toEqual([]);
+    const byA = await db.as(guruA, async (q) =>
+      (await q.query("update public.teaching_materials set archived_at = null where id = $1 returning id", [id])).rows,
+    );
+    expect(byA).toHaveLength(1);
+    const files = await db.as(guruA, async (q) => (await q.query("select name from storage.objects where name = $1", [path])).rows);
+    expect(files).toHaveLength(1);
+  });
+});

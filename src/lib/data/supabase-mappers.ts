@@ -84,6 +84,7 @@ export function mapTeachingMaterial(row: TableRow<"teaching_materials">): Teachi
     fileSize: row.file_size === null ? null : Number(row.file_size),
     externalUrl: row.external_url,
     createdAt: row.created_at,
+    archivedAt: row.archived_at,
   };
 }
 

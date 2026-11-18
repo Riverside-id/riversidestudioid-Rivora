@@ -181,6 +181,7 @@ function mat(
     fileSize: isFile ? 850_000 + title.length * 12_000 : null,
     externalUrl: kind === "video" || kind === "link" ? `https://example.com/demo/${slug}` : null,
     createdAt,
+    archivedAt: null,
   };
 }
 

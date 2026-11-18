@@ -25,9 +25,12 @@ export interface RivoraRepository {
   getProfile(): Promise<Profile | null>;
   listAcademicYears(): Promise<AcademicYear[]>;
   listSemesters(academicYearId: string): Promise<Semester[]>;
-  listClasses(academicYearId: string): Promise<TeachingClass[]>;
+  /** Default hanya kelas aktif; `includeArchived` untuk arsip & riwayat. */
+  listClasses(academicYearId: string, options?: { includeArchived?: boolean }): Promise<TeachingClass[]>;
   listWeeklySchedules(semesterId: string): Promise<WeeklySchedule[]>;
   listMaterials(): Promise<TeachingMaterial[]>;
+  /** Materi yang diarsipkan (file tetap tersimpan). */
+  listArchivedMaterials(): Promise<TeachingMaterial[]>;
   listLessonPlans(semesterId: string): Promise<ClassLessonPlan[]>;
   listMeetingRecords(semesterId: string): Promise<MeetingRecord[]>;
   /** Histori perubahan status untuk pertemuan tertentu (urut waktu). */
