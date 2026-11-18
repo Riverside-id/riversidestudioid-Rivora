@@ -17,8 +17,8 @@ materi, dan progres pelaksanaan pembelajaran per kelas, per semester, per tahun 
 | Fase | Status |
 |---|---|
 | A — Foundation & UI | Selesai, di `main` |
-| B — Auth & Data | Di `feature/fase-b` (PR ke `main`); migration **sudah diterapkan** ke Supabase Cloud (18 Nov 2026) |
-| C — Teaching Core | Sebagian di `feature/fase-c-materi` (PR #2): Bank Materi unggah PDF/Word/PowerPoint; migration **sudah diterapkan** ke Cloud (18 Nov 2026) |
+| B — Auth & Data | Selesai, di `main` (PR #1, #3); migration sudah diterapkan ke Supabase Cloud (18 Nov 2026) |
+| C — Teaching Core | Sebagian, di `main` (PR #2): Bank Materi unggah PDF/Word/PowerPoint; migration sudah diterapkan ke Cloud. Rencana per kelas & catatan Selesai/Tunda belum |
 | D — Periode & Arsip | Belum |
 | E — QA & Staging | Belum |
 
@@ -223,9 +223,8 @@ Keputusan pemilik (18 Nov 2026): hosting memakai **Vercel** (menggantikan rencan
 | Repo | `Riverside-id/riversidestudioid-Rivora` (terhubung; push ke `main` = deploy production) |
 | Deploy preview | otomatis untuk branch lain/PR, dilindungi *Vercel Authentication* (hanya anggota tim) |
 
-Status 18 Nov 2026: env **Preview** dan **Production** sudah diisi (mode supabase). Production menjalankan kode
-Fase B (deployment dipromosikan lewat dashboard, belum lewat merge ke `main`): halaman aplikasi meminta login.
-Selama PR Fase B belum di-merge, push ke `main` akan mengembalikan production ke Fase A.
+Status 18 Nov 2026: env **Preview** dan **Production** sudah diisi (mode supabase). Production = branch `main`
+(commit `b995e0a`: Fase B + Bank Materi), dideploy otomatis oleh Vercel setelah merge PR #3.
 
 Variabel environment (Vercel → Project → Settings → Environment Variables):
 
