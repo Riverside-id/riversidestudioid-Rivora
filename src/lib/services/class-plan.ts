@@ -39,6 +39,8 @@ export interface HistoryItem {
 
 export interface ClassPlanPage {
   cls: TeachingClass;
+  /** Kelas diarsipkan: riwayat tetap bisa dibaca, rencana tidak bisa diubah. */
+  archived: boolean;
   plans: PlanItem[];
   progress: ClassProgress;
   next: { title: string; sessionNumber: number; plannedSessions: number } | null;
@@ -53,11 +55,12 @@ export async function getClassPlanPage(
   classId: string,
 ): Promise<ClassPlanPage | null> {
   if (!ctx.activeYear || !ctx.selectedSemester) return null;
-  const [data, materials] = await Promise.all([
+  const [data, materials, allClasses] = await Promise.all([
     loadSemesterData(repo, ctx.activeYear, ctx.selectedSemester),
     repo.listMaterials(),
+    repo.listClasses(ctx.activeYear.id, { includeArchived: true }),
   ]);
-  const cls = data.classes.find((c) => c.id === classId);
+  const cls = allClasses.find((c) => c.id === classId);
   if (!cls) return null;
 
   const plans = data.plans.filter((p) => p.classId === classId).sort((a, b) => a.sortOrder - b.sortOrder);
@@ -69,6 +72,7 @@ export async function getClassPlanPage(
 
   return {
     cls,
+    archived: cls.archivedAt !== null,
     plans: plans.map((p) => {
       const material = p.materialId ? materialById.get(p.materialId) : undefined;
       return {

@@ -51,6 +51,13 @@ export interface RivoraMutations {
     gradeLevel: GradeLevel | null;
   }): Promise<void>;
   archiveMaterial(materialId: string): Promise<void>;
+  restoreMaterial(materialId: string): Promise<void>;
+  restoreClass(classId: string): Promise<void>;
+
+  /** Arsipkan tahun aktif & mulai tahun baru dalam satu transaksi (RPC). Progres tidak disalin. */
+  startNewAcademicYear(payload: NewAcademicYearPayload): Promise<string>;
+  /** Pulihkan tahun arsip menjadi aktif; tahun aktif sekarang diarsipkan (RPC). */
+  activateArchivedYear(yearId: string): Promise<void>;
   /** Signed URL berdurasi pendek: PDF dibuka di browser, Word/PowerPoint diunduh. */
   getMaterialFileUrl(materialId: string): Promise<string>;
 
@@ -90,6 +97,17 @@ export interface RivoraMutations {
   }): Promise<string>;
   /** Jadwal pengganti untuk pertemuan yang ditunda (tanggal & jam sendiri, tidak mengubah jadwal mingguan). */
   createReplacement(input: { postponedRecordId: string; date: ISODate; startTime: LocalTime; endTime: LocalTime }): Promise<void>;
+}
+
+export interface NewAcademicYearPayload {
+  label: string;
+  start_date: ISODate;
+  end_date: ISODate;
+  semesters: Array<{ number: 1 | 2; start_date: ISODate; end_date: ISODate; midterm_date: ISODate | null }>;
+  active_semester_number: 1 | 2;
+  copy_classes: boolean;
+  copy_plans: boolean;
+  copy_schedules: boolean;
 }
 
 export type MeetingTarget = { kind: "occurrence"; scheduleId: string; date: ISODate } | { kind: "record"; recordId: string };
@@ -408,6 +426,41 @@ export function createSupabaseMutations(client: RivoraSupabaseClient, userId: st
         start_time: startTime,
         end_time: endTime,
       });
+      if (error) throw toDataError(error);
+    },
+
+    async restoreMaterial(materialId) {
+      const { data, error } = await client
+        .from("teaching_materials")
+        .update({ archived_at: null })
+        .eq("id", materialId)
+        .eq("owner_id", userId)
+        .not("archived_at", "is", null)
+        .select("id");
+      if (error) throw toDataError(error);
+      ensureAffected(data);
+    },
+
+    async restoreClass(classId) {
+      const { data, error } = await client
+        .from("teaching_classes")
+        .update({ archived_at: null })
+        .eq("id", classId)
+        .eq("owner_id", userId)
+        .not("archived_at", "is", null)
+        .select("id");
+      if (error) throw toDataError(error);
+      ensureAffected(data);
+    },
+
+    async startNewAcademicYear(payload) {
+      const { data, error } = await client.rpc("start_new_academic_year", { payload: payload as unknown as Json });
+      if (error) throw toDataError(error);
+      return data;
+    },
+
+    async activateArchivedYear(yearId) {
+      const { error } = await client.rpc("activate_archived_year", { year_id: yearId });
       if (error) throw toDataError(error);
     },
 

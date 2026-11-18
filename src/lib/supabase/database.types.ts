@@ -278,6 +278,8 @@ export type Database = {
     Views: { [_ in never]: never };
     Functions: {
       complete_onboarding: { Args: { payload: Json }; Returns: string };
+      start_new_academic_year: { Args: { payload: Json }; Returns: string };
+      activate_archived_year: { Args: { year_id: string }; Returns: undefined };
     };
     Enums: {
       academic_year_status: "active" | "planned" | "archived";

@@ -244,3 +244,17 @@ async function updateClass(form: FormData): Promise<ActionState> {
   refresh();
   return { status: "success", message: `Kelas diubah menjadi ${label}. Riwayatnya tetap tersimpan.` };
 }
+
+export async function restoreClassAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const parsed = idSchema.safeParse(text(form, "classId"));
+  if (!parsed.success) return { status: "error", message: "Kelas tidak valid." };
+  const ctx = await getMutationContext();
+  if (!ctx.ok) return ctx.state;
+  try {
+    await ctx.mutations.restoreClass(parsed.data);
+  } catch (error) {
+    return errorState(error);
+  }
+  refresh();
+  return { status: "success", message: "Kelas dipulihkan beserta seluruh riwayatnya." };
+}

@@ -21,10 +21,10 @@ export function createFixtureRepository(scenario: DemoScenario = "lengkap"): Riv
           .sort((a, b) => a.number - b.number),
       );
     },
-    async listClasses(academicYearId) {
+    async listClasses(academicYearId, options) {
       return copy(
         data.classes
-          .filter((c) => c.academicYearId === academicYearId)
+          .filter((c) => c.academicYearId === academicYearId && (options?.includeArchived || c.archivedAt === null))
           .sort(
             (a, b) => a.gradeLevel - b.gradeLevel || a.section.localeCompare(b.section, "id"),
           ),
@@ -39,6 +39,9 @@ export function createFixtureRepository(scenario: DemoScenario = "lengkap"): Riv
           (a, b) => (a.gradeLevel ?? 0) - (b.gradeLevel ?? 0) || a.title.localeCompare(b.title, "id"),
         ),
       );
+    },
+    async listArchivedMaterials() {
+      return [];
     },
     async listLessonPlans(semesterId) {
       return copy(

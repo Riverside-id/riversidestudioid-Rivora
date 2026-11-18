@@ -259,3 +259,19 @@ describe("arsip baca-saja & edit kelas (F03/F10)", () => {
     await expect(db.as(guruB, (q) => addMeeting(q, b, { date: WED_1 }))).rejects.toThrow(/diarsipkan/);
   });
 });
+
+describe("kelas diarsipkan & dipulihkan", () => {
+  it("riwayat tetap ada saat kelas diarsipkan; pemilik bisa memulihkan, guru lain tidak", async () => {
+    const before = await db.as(guruA, async (q) => (await q.query<{ n: number }>("select count(*)::int as n from public.meeting_records where class_id = $1", [a.class3B])).rows[0].n);
+    await db.as(guruA, (q) => q.query("update public.teaching_classes set archived_at = now() where id = $1", [a.class3B]));
+    const afterArchive = await db.as(guruA, async (q) => (await q.query<{ n: number }>("select count(*)::int as n from public.meeting_records where class_id = $1", [a.class3B])).rows[0].n);
+    expect(afterArchive).toBe(before);
+    const plans = await db.as(guruA, async (q) => (await q.query("select id from public.class_lesson_plans where class_id = $1", [a.class3B])).rows);
+    expect(plans.length).toBeGreaterThan(0);
+
+    const byB = await db.as(guruB, async (q) => (await q.query("update public.teaching_classes set archived_at = null where id = $1 returning id", [a.class3B])).rows);
+    expect(byB).toEqual([]);
+    const byA = await db.as(guruA, async (q) => (await q.query("update public.teaching_classes set archived_at = null where id = $1 returning id", [a.class3B])).rows);
+    expect(byA).toHaveLength(1);
+  });
+});
