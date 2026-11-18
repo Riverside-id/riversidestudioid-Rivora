@@ -35,7 +35,7 @@ select 'H. jumlah profil / akun',
 union all
 select 'I. storage materi',
        coalesce((select case when b.public then 'PUBLIK!' else 'privat' end
-                        || ', batas ' || (b.file_size_limit / 1048576)::text || ' MB, '
+                        || ', ' || coalesce('batas ' || (b.file_size_limit / 1048576)::text || ' MB', 'tanpa batas bucket') || ', '
                         || coalesce(array_length(b.allowed_mime_types, 1), 0)::text || ' tipe file, '
                         || (select count(*) from pg_policies
                             where schemaname = 'storage' and tablename = 'objects'

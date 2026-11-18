@@ -1,14 +1,9 @@
 import { z } from "zod";
-import { MAX_MATERIAL_BYTES } from "@/lib/materials/file-rules";
-
 /** Langkah 1: data file dari browser (dicek ulang di server sebelum izin unggah diberikan). */
 export const prepareUploadSchema = z.object({
   fileName: z.string().trim().min(1, { error: "Pilih file materi." }).max(200, { error: "Nama file terlalu panjang." }),
-  fileSize: z
-    .number()
-    .int()
-    .min(1, { error: "File kosong. Pilih file lain." })
-    .max(MAX_MATERIAL_BYTES, { error: "Ukuran file melebihi 10 MB." }),
+  // Tanpa batas atas dari aplikasi; Storage menolak bila melewati batas global project.
+  fileSize: z.number().int().min(1, { error: "File kosong. Pilih file lain." }),
   mimeType: z.string().max(200),
 });
 

@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { DataError } from "@/lib/data/errors";
 import { createSupabaseMutations, type RivoraMutations } from "@/lib/data/mutations";
 import { createSupabaseRepository } from "@/lib/data/supabase-repository";
-import { MATERIAL_BUCKET, MAX_MATERIAL_BYTES } from "@/lib/materials/file-rules";
+import { MATERIAL_BUCKET } from "@/lib/materials/file-rules";
 import type { Database } from "@/lib/supabase/database.types";
 
 const url = process.env.RIVORA_TEST_SUPABASE_URL;
@@ -113,7 +113,7 @@ describe.skipIf(!enabled)(`Supabase ${isLocal ? "lokal" : "Cloud"}: Storage Bank
     expect(data).toBeNull();
   });
 
-  it("bucket menolak jenis file lain dan file > 10 MB", async () => {
+  it("bucket menolak jenis file lain; file > 10 MB kini diterima (tanpa batas dari aplikasi)", async () => {
     const own = (ext: string) => `${a.userId}/${crypto.randomUUID()}.${ext}`;
     const { error: typeError } = await a.client.storage
       .from(MATERIAL_BUCKET)
@@ -122,9 +122,14 @@ describe.skipIf(!enabled)(`Supabase ${isLocal ? "lokal" : "Cloud"}: Storage Bank
 
     await expect(a.mutations.prepareMaterialUpload({ fileName: "foto.jpg", fileSize: 10, mimeType: "image/jpeg" })).rejects.toBeInstanceOf(DataError);
 
-    const big = new Uint8Array(MAX_MATERIAL_BYTES + 1024);
-    const { error: sizeError } = await a.client.storage.from(MATERIAL_BUCKET).upload(own("pdf"), big, { contentType: "application/pdf" });
-    expect(sizeError).not.toBeNull();
+    // 11 MB: dulu ditolak bucket (batas 10 MB), sekarang lolos (batas global project Free 50 MB).
+    const big = new Uint8Array(11 * 1024 * 1024);
+    big.set(PDF_BYTES);
+    const bigPath = await uploadMaterial(a, "Modul besar.pdf", big, "Modul besar");
+    paths.push(bigPath);
+    const list = await createSupabaseRepository(a.client, a.userId).listMaterials();
+    expect(list.find((m) => m.title === "Modul besar")?.fileSize).toBe(big.byteLength);
+    await a.mutations.archiveMaterial(list.find((m) => m.title === "Modul besar")!.id);
   }, 60_000);
 
   it("arsip: materi hilang dari daftar, file tetap ada dan tetap bisa dibuka", async () => {

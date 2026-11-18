@@ -65,7 +65,7 @@ async function MateriContent({ searchParams }: { searchParams: PageProps<"/mater
         <PhaseNote>
           {isDemo
             ? "Mode demo: data contoh tidak bisa diubah. Hubungkan Supabase untuk mengunggah materi."
-            : "Unggah PDF, Word (DOC/DOCX), atau PowerPoint (PPT/PPTX), maksimal 10 MB per file. File hanya bisa dibuka oleh Anda. Tautan video, catatan, dan rencana per kelas dibangun berikutnya di Fase C."}
+            : "Unggah PDF, Word (DOC/DOCX), atau PowerPoint (PPT/PPTX). File hanya bisa dibuka oleh Anda. Tautan video, catatan, dan rencana per kelas dibangun berikutnya di Fase C."}
         </PhaseNote>
 
         {notice ? <FormMessage state={{ status: "error", message: notice }} /> : null}

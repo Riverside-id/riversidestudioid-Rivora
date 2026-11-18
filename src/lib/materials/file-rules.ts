@@ -7,8 +7,10 @@ import type { MaterialFileKind } from "@/lib/domain/types";
 
 export const MATERIAL_BUCKET = "materi";
 
-/** PRD §10: batas awal 10 MB per file. Sama dengan file_size_limit bucket. */
-export const MAX_MATERIAL_BYTES = 10 * 1024 * 1024;
+/**
+ * Ukuran file TIDAK dibatasi aplikasi (keputusan pemilik 18 Nov 2026). Batas yang tersisa adalah batas
+ * unggah global Supabase project (paket Free: 50 MB per file), yang dilaporkan Storage sebagai error 413.
+ */
 
 export const MATERIAL_FILE_TYPES: Record<MaterialFileKind, { mime: string; label: string }> = {
   pdf: { mime: "application/pdf", label: "PDF" },
@@ -30,7 +32,9 @@ export const MATERIAL_ACCEPT = [
 const GENERIC_MIME = new Set(["", "application/octet-stream", "application/zip", "application/x-zip-compressed"]);
 
 export const FILE_TYPE_ERROR = "Jenis file belum didukung. Unggah PDF, Word (DOC/DOCX), atau PowerPoint (PPT/PPTX).";
-export const FILE_SIZE_ERROR = "Ukuran file melebihi 10 MB. Kecilkan atau pisahkan file, lalu coba lagi.";
+export const FILE_TOO_LARGE_ERROR =
+  "File terlalu besar untuk batas unggah Supabase project ini (paket Free: 50 MB per file). " +
+  "Kecilkan file, atau naikkan batasnya di Supabase → Storage → Settings.";
 export const FILE_EMPTY_ERROR = "File kosong. Pilih file lain.";
 
 export function isMaterialFileKind(value: string): value is MaterialFileKind {
@@ -54,7 +58,6 @@ export function checkMaterialFile(file: { name: string; size: number; type: stri
   const type = (file.type ?? "").toLowerCase();
   if (type !== expected && !GENERIC_MIME.has(type)) return { ok: false, message: FILE_TYPE_ERROR };
   if (file.size <= 0) return { ok: false, message: FILE_EMPTY_ERROR };
-  if (file.size > MAX_MATERIAL_BYTES) return { ok: false, message: FILE_SIZE_ERROR };
   return { ok: true, kind: ext, contentType: expected };
 }
 

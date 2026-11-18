@@ -2,12 +2,11 @@ import { describe, expect, it } from "vitest";
 import { storageErrorMessage } from "@/lib/data/errors";
 import {
   checkMaterialFile,
-  FILE_SIZE_ERROR,
+  FILE_TOO_LARGE_ERROR,
   FILE_TYPE_ERROR,
   formatFileSize,
   MATERIAL_ACCEPT,
   materialStoragePath,
-  MAX_MATERIAL_BYTES,
   opensInBrowser,
   parseOwnedStoragePath,
   titleFromFileName,
@@ -41,7 +40,7 @@ describe("aturan file materi", () => {
     expect(checkMaterialFile({ name: "lama.ppt", size: 1000, type: "application/octet-stream" })).toMatchObject({ ok: true, kind: "ppt" });
   });
 
-  it("menolak jenis lain, tipe yang tidak cocok, file kosong, dan file > 10 MB", () => {
+  it("menolak jenis lain, tipe yang tidak cocok, dan file kosong; ukuran tidak dibatasi aplikasi", () => {
     expect(checkMaterialFile({ name: "foto.jpg", size: 1000, type: "image/jpeg" })).toEqual({ ok: false, message: FILE_TYPE_ERROR });
     expect(checkMaterialFile({ name: "virus.pdf", size: 1000, type: "application/x-msdownload" })).toEqual({
       ok: false,
@@ -49,11 +48,8 @@ describe("aturan file materi", () => {
     });
     expect(checkMaterialFile({ name: "tanpa-ekstensi", size: 1000, type: "" })).toEqual({ ok: false, message: FILE_TYPE_ERROR });
     expect(checkMaterialFile({ name: "kosong.pdf", size: 0, type: "application/pdf" }).ok).toBe(false);
-    expect(checkMaterialFile({ name: "besar.pdf", size: MAX_MATERIAL_BYTES + 1, type: "application/pdf" })).toEqual({
-      ok: false,
-      message: FILE_SIZE_ERROR,
-    });
-    expect(checkMaterialFile({ name: "pas.pdf", size: MAX_MATERIAL_BYTES, type: "application/pdf" }).ok).toBe(true);
+    expect(checkMaterialFile({ name: "besar.pdf", size: 250 * 1024 * 1024, type: "application/pdf" }).ok).toBe(true);
+    expect(checkMaterialFile({ name: "modul.docx", size: 40 * 1024 * 1024, type: "" }).ok).toBe(true);
   });
 
   it("path Storage selalu di folder pemilik dan tidak bisa dipakai guru lain", () => {
@@ -77,9 +73,10 @@ describe("aturan file materi", () => {
 });
 
 describe("validasi form materi", () => {
-  it("izin unggah: ukuran dicek ulang di server", () => {
+  it("izin unggah: file kosong ditolak, ukuran besar diterima", () => {
     expect(prepareUploadSchema.safeParse({ fileName: "a.pdf", fileSize: 10, mimeType: "application/pdf" }).success).toBe(true);
-    expect(prepareUploadSchema.safeParse({ fileName: "a.pdf", fileSize: MAX_MATERIAL_BYTES + 1, mimeType: "" }).success).toBe(false);
+    expect(prepareUploadSchema.safeParse({ fileName: "a.pdf", fileSize: 500 * 1024 * 1024, mimeType: "" }).success).toBe(true);
+    expect(prepareUploadSchema.safeParse({ fileName: "a.pdf", fileSize: 0, mimeType: "" }).success).toBe(false);
     expect(prepareUploadSchema.safeParse({ fileName: " ", fileSize: 10, mimeType: "" }).success).toBe(false);
   });
 
@@ -109,7 +106,7 @@ describe("validasi form materi", () => {
 
 describe("pesan error Storage", () => {
   it("menerjemahkan batas ukuran, tipe, akses, dan koneksi", () => {
-    expect(storageErrorMessage({ message: "The object exceeded the maximum allowed size", statusCode: "413" })).toMatch(/10 MB/);
+    expect(storageErrorMessage({ message: "The object exceeded the maximum allowed size", statusCode: "413" })).toBe(FILE_TOO_LARGE_ERROR);
     expect(storageErrorMessage({ message: "mime type text/plain is not supported", statusCode: "415" })).toMatch(/Jenis file/);
     expect(storageErrorMessage({ message: "new row violates row-level security policy", statusCode: "403" })).toMatch(/akses/);
     expect(storageErrorMessage({ name: "StorageUnknownError", message: "Failed to fetch" })).toMatch(/koneksi/);

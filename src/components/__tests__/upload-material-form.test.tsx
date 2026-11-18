@@ -45,10 +45,11 @@ describe("form unggah materi", () => {
     expect(actions.prepareMaterialUploadAction).not.toHaveBeenCalled();
   });
 
-  it("menolak file lebih dari 10 MB", () => {
+  it("tidak membatasi ukuran file di aplikasi (file 40 MB diterima)", () => {
     render(<UploadMaterialForm supabaseUrl="https://contoh.supabase.co" publishableKey="sb_publishable_x" />);
-    pick(makeFile("besar.pdf", "application/pdf", 10 * 1024 * 1024 + 1));
-    expect(screen.getByRole("alert").textContent).toMatch(/10 MB/);
+    pick(makeFile("Modul besar.pdf", "application/pdf", 40 * 1024 * 1024));
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByText("Modul besar.pdf")).toBeTruthy();
   });
 
   it("mengisi judul dari nama file, mengunggah ke Storage, lalu menyimpan materi", async () => {
@@ -65,7 +66,8 @@ describe("form unggah materi", () => {
 
     await waitFor(() => expect(screen.getByRole("status").textContent).toMatch("tersimpan"));
     expect(actions.prepareMaterialUploadAction).toHaveBeenCalledWith({ fileName: "Modul_ajar-pecahan.docx", fileSize: 2048, mimeType: DOCX });
-    expect(uploadToSignedUrl).toHaveBeenCalledWith(PATH, "tkn", expect.any(ArrayBuffer), { contentType: DOCX, upsert: false });
+    expect(uploadToSignedUrl).toHaveBeenCalledWith(PATH, "tkn", expect.any(Blob), { contentType: DOCX, upsert: false });
+    expect((uploadToSignedUrl.mock.calls[0][2] as Blob).type).toBe(DOCX);
     expect(actions.createMaterialAction).toHaveBeenCalledWith({
       path: PATH,
       fileName: "Modul_ajar-pecahan.docx",
@@ -85,7 +87,7 @@ describe("form unggah materi", () => {
     pick(makeFile("Modul.docx", DOCX));
     fireEvent.click(screen.getByRole("button", { name: "Unggah Materi" }));
 
-    await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/10 MB/));
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/batas unggah Supabase/));
     expect(actions.createMaterialAction).not.toHaveBeenCalled();
   });
 });

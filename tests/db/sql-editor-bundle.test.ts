@@ -13,6 +13,18 @@ import { buildSqlEditorBundle } from "../../scripts/bundle-migrations.mjs";
 
 const CHECK_SQL = readFileSync("supabase/checks/cek_kondisi.sql", "utf8");
 const FASE_C = "20261118200000";
+const TANPA_BATAS = "20261118210000";
+
+/** Bundel berisi migration SEBELUM versi tertentu (meniru kondisi Cloud pada saat itu). */
+function bundleBefore(version: string): string {
+  const dir = mkdtempSync(join(tmpdir(), "rivora-migrasi-"));
+  for (const f of readdirSync("supabase/migrations").filter((f) => f.endsWith(".sql") && f < version)) {
+    copyFileSync(join("supabase/migrations", f), join(dir, f));
+  }
+  const { sql } = buildSqlEditorBundle({ migrationsDir: dir });
+  rmSync(dir, { recursive: true, force: true });
+  return sql;
+}
 
 async function freshDatabase() {
   const db = new PGlite({ extensions: { btree_gist } });
@@ -47,29 +59,38 @@ describe("bundel SQL Editor (Supabase Cloud tanpa CLI)", { timeout: 30_000 }, ()
     expect(shown.F).toBe("tidak ada");
     expect(shown.G).toBe(migrations.map((m) => `${m.version} ${m.name}`).join(", "));
     expect(shown.H).toBe("1 / 1"); // akun lama mendapat profil lewat backfill
-    expect(shown.I).toBe("privat, batas 10 MB, 5 tipe file, 3 policy");
+    expect(shown.I).toBe("privat, tanpa batas bucket, 5 tipe file, 3 policy");
     await db.close();
   });
 
   it("--since hanya membundel migration baru untuk project yang sudah berjalan", async () => {
     const db = await freshDatabase();
-    // Kondisi Cloud saat ini: hanya migration Fase B yang sudah diterapkan.
-    const faseBDir = mkdtempSync(join(tmpdir(), "rivora-fase-b-"));
-    for (const f of readdirSync("supabase/migrations").filter((f) => f.endsWith(".sql") && f < FASE_C)) {
-      copyFileSync(join("supabase/migrations", f), join(faseBDir, f));
-    }
-    await db.exec(buildSqlEditorBundle({ migrationsDir: faseBDir }).sql);
-    rmSync(faseBDir, { recursive: true, force: true });
+    // Hanya migration Fase B yang sudah diterapkan.
+    await db.exec(bundleBefore(FASE_C));
     expect((await check(db)).I).toBe("bucket materi belum ada");
 
     const { sql, migrations } = buildSqlEditorBundle({ since: FASE_C });
-    expect(migrations).toEqual([{ version: FASE_C, name: "fase_c_materi" }]);
+    expect(migrations.map((m) => m.version)).toEqual([FASE_C, TANPA_BATAS]);
     expect(sql).not.toMatch(/create table public\.profiles/);
 
     const shown = rowsToMap((await db.exec(sql)).at(-1)!.rows);
     expect(shown.B).toContain("teaching_materials (RLS aktif)");
     expect(shown.G.split(", ")).toContain(`${FASE_C} fase_c_materi`);
-    expect(shown.I).toBe("privat, batas 10 MB, 5 tipe file, 3 policy");
+    expect(shown.I).toBe("privat, tanpa batas bucket, 5 tipe file, 3 policy");
+    await db.close();
+  });
+
+  it("kondisi Cloud 18 Nov (materi batas 10 MB) → migration tanpa batas ukuran", async () => {
+    const db = await freshDatabase();
+    await db.exec(bundleBefore(TANPA_BATAS));
+    expect((await check(db)).I).toBe("privat, batas 10 MB, 5 tipe file, 3 policy");
+
+    const { sql, migrations } = buildSqlEditorBundle({ since: TANPA_BATAS });
+    expect(migrations).toEqual([{ version: TANPA_BATAS, name: "materi_tanpa_batas_ukuran" }]);
+    const shown = rowsToMap((await db.exec(sql)).at(-1)!.rows);
+    expect(shown.I).toBe("privat, tanpa batas bucket, 5 tipe file, 3 policy");
+    expect(shown.G.split(", ")).toContain(`${TANPA_BATAS} materi_tanpa_batas_ukuran`);
+    expect(shown.D).toBe("20");
     await db.close();
   });
 

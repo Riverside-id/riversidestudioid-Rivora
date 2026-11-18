@@ -54,7 +54,7 @@ dimajukan dari Fase C ke Fase B atas permintaan pemilik.
 
 ## Fase C — Teaching Core
 
-Jadwal berulang + pengecualian/pengganti, bank materi privat (bucket privat, MIME/ukuran 10 MB),
+Jadwal berulang + pengecualian/pengganti, bank materi privat (bucket privat, MIME; ukuran tanpa batas dari aplikasi sejak 18 Nov 2026),
 rencana per kelas, catatan pelaksanaan + audit, perhitungan progres dari data nyata.
 
 ## Fase D — Periode & Arsip

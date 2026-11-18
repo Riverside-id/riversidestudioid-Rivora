@@ -19,8 +19,10 @@ Belum dibuat (Fase C): `class_lesson_plans`, `meeting_records`, `audit_events`.
 
 ## Bank Materi & Storage (migration `20261118200000_fase_c_materi`)
 
-- Jenis file: PDF, Word (DOC/DOCX), PowerPoint (PPT/PPTX) — PRD F05 + permintaan pemilik (Word). Maks. 10 MB.
-- Bucket **privat** `materi`: `file_size_limit` 10 MB + daftar tipe MIME. Path `<owner_id>/<uuid>.<ekstensi>`;
+- Jenis file: PDF, Word (DOC/DOCX), PowerPoint (PPT/PPTX) — PRD F05 + permintaan pemilik (Word).
+- Ukuran: **tidak dibatasi aplikasi** (keputusan pemilik 18 Nov 2026, migration `20261118210000`). Batas yang tersisa
+  adalah batas unggah global Supabase project (Storage → Settings; paket Free maks. 50 MB per file, kuota total 1 GB).
+- Bucket **privat** `materi`: daftar tipe MIME, tanpa `file_size_limit` sendiri. Path `<owner_id>/<uuid>.<ekstensi>`;
   nama asli disimpan di `file_name`. Constraint memastikan path berada di folder pemilik dan ekstensi = jenis.
 - Policy Storage: guru hanya membaca/mengunggah di foldernya; tidak ada timpa (UPDATE); hapus hanya untuk file
   miliknya yang **belum dirujuk** materi (membersihkan unggahan gagal). File yang dipakai materi tidak bisa dihapus.
@@ -68,6 +70,8 @@ Kode error khusus (dipetakan ke pesan UI di `src/lib/data/errors.ts`): `RV001` a
 | `owner_id` hanya di tabel induk | `owner_id` juga di `semesters` & `weekly_schedules` | RLS sederhana & cepat, FK komposit lintas akun |
 | `weekly_schedules` tanpa tahun | + `academic_year_id` | FK komposit kelas↔semester satu tahun; trigger arsip seragam |
 | UUID semua PK | `subjects.code` teks (`matematika`) | Data acuan statis, mudah dibaca |
+| Materi PDF/PPT/PPTX | + Word (DOC/DOCX) | Permintaan pemilik |
+| Batas awal 10 MB per file (§10) | tanpa batas dari aplikasi; ikut batas global Supabase | Keputusan pemilik 18 Nov 2026 |
 
 ## Alur aplikasi
 
