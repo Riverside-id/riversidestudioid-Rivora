@@ -3,6 +3,7 @@
 import { ChevronDown, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
+import { signOutAction } from "@/app/(auth)/actions";
 import { initialsOf } from "@/lib/domain/labels";
 
 export function UserMenu({ displayName, schoolName }: { displayName: string; schoolName: string | null }) {
@@ -67,14 +68,15 @@ export function UserMenu({ displayName, schoolName }: { displayName: string; sch
               </Link>
             </li>
             <li>
-              <Link
-                href="/login"
-                onClick={() => setOpen(false)}
-                className="flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] text-ink hover:bg-primary-softer"
-              >
-                <LogOut aria-hidden className="size-5 text-ink-muted" />
-                Keluar
-              </Link>
+              <form action={signOutAction}>
+                <button
+                  type="submit"
+                  className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-[15px] text-ink hover:bg-primary-softer"
+                >
+                  <LogOut aria-hidden className="size-5 text-ink-muted" />
+                  Keluar
+                </button>
+              </form>
             </li>
           </ul>
         </div>

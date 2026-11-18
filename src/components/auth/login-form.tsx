@@ -1,42 +1,39 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
-import { Button } from "@/components/ui/button";
+import { useActionState, useState, type FormEvent } from "react";
+import { signInAction } from "@/app/(auth)/actions";
 import { Field, TextInput } from "@/components/ui/field";
+import { FormMessage } from "@/components/ui/form-message";
+import { SubmitButton } from "@/components/ui/submit-button";
+import { IDLE_STATE, valueOf } from "@/lib/validation/action-state";
 import { loginSchema } from "@/lib/validation/auth";
 import { issuesToFieldErrors } from "@/lib/validation/onboarding";
 import { DemoAuthNote } from "./demo-auth-note";
 import { PasswordInput } from "./password-input";
 
-/**
- * Fase A: validasi di browser saja, TIDAK mengirim data ke mana pun.
- * Fase B: diganti Server Action + Supabase Auth (validasi ulang di server).
- */
-export function LoginForm() {
-  const router = useRouter();
-  const [errors, setErrors] = useState<Record<string, string>>({});
+/** Validasi instan di browser + validasi ulang & Supabase Auth di server (Server Action). */
+export function LoginForm({ demo }: { demo: boolean }) {
+  const [state, formAction] = useActionState(signInAction, IDLE_STATE);
+  const [clientErrors, setClientErrors] = useState<Record<string, string> | null>(null);
+  const errors = clientErrors ?? (state.status === "error" ? (state.fieldErrors ?? {}) : {});
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
     const form = new FormData(e.currentTarget);
-    const result = loginSchema.safeParse({
-      email: String(form.get("email") ?? ""),
-      password: String(form.get("password") ?? ""),
-    });
+    const result = loginSchema.safeParse({ email: String(form.get("email") ?? ""), password: String(form.get("password") ?? "") });
     if (!result.success) {
-      setErrors(issuesToFieldErrors(result.error));
+      e.preventDefault();
+      setClientErrors(issuesToFieldErrors(result.error));
       return;
     }
-    setErrors({});
-    router.push("/dashboard");
+    setClientErrors(null);
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-5">
+    <form action={formAction} onSubmit={onSubmit} noValidate className="space-y-5">
+      <FormMessage state={state} />
       <Field id="email" label="Email" error={errors.email}>
-        <TextInput id="email" type="email" autoComplete="email" inputMode="email" placeholder="nama@sekolah.sch.id" error={errors.email} />
+        <TextInput id="email" type="email" autoComplete="email" inputMode="email" placeholder="nama@sekolah.sch.id" defaultValue={valueOf(state, "email")} error={errors.email} />
       </Field>
       <Field id="password" label="Kata sandi" error={errors.password}>
         <PasswordInput id="password" autoComplete="current-password" error={errors.password} />
@@ -46,13 +43,15 @@ export function LoginForm() {
           Lupa kata sandi?
         </Link>
       </div>
-      <Button type="submit" size="lg" className="w-full">
+      <SubmitButton size="lg" className="w-full" pendingLabel="Memeriksa…">
         Masuk
-      </Button>
-      <DemoAuthNote>
-        Mode demo: login Supabase belum aktif (Fase B). Data form tidak dikirim; tombol Masuk membuka
-        beranda berisi data contoh.
-      </DemoAuthNote>
+      </SubmitButton>
+      {demo ? (
+        <DemoAuthNote>
+          Mode demo: login belum memeriksa akun. Data form tidak dikirim; tombol Masuk membuka beranda berisi
+          data contoh.
+        </DemoAuthNote>
+      ) : null}
     </form>
   );
 }

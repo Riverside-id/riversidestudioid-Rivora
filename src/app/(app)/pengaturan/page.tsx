@@ -1,7 +1,10 @@
 import { CalendarRange, KeyRound, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { NewPasswordForm } from "@/components/auth/new-password-form";
 import { PageHeader } from "@/components/layout/page-header";
+import { ProfileForm } from "@/components/settings/profile-form";
+import { SemesterDatesForm } from "@/components/settings/semester-dates-form";
 import { Card, CardHeader } from "@/components/ui/card";
 import { PhaseNote } from "@/components/ui/phase-note";
 import { PageSkeleton } from "@/components/ui/skeleton";
@@ -29,30 +32,55 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 async function PengaturanContent() {
-  const { app } = await getRequestContext();
+  const { app, isDemo } = await getRequestContext();
   const p = app.profile;
+  const canEditPeriod = !isDemo && app.activeYear?.status !== "archived";
 
   return (
     <>
       <PageHeader ctx={app} showPeriod={false} title="Pengaturan" subtitle="Profil, periode akademik, dan akun." />
       <div className="max-w-3xl space-y-5">
-        <PhaseNote>
-          Tampilan baca-saja. Ubah nama, zona waktu, periode, dan kata sandi (Supabase Auth) dibangun pada Fase B.
-        </PhaseNote>
+        {isDemo ? <PhaseNote>Mode demo: pengaturan hanya bisa dilihat, tidak bisa diubah.</PhaseNote> : null}
 
         <Card aria-labelledby="profil">
           <CardHeader icon={UserRound} title="Profil Guru" titleId="profil" />
-          <dl>
-            <Row label="Nama panggilan" value={p?.displayName ?? "–"} />
-            <Row label="Nama sekolah" value={p?.schoolName ?? "Belum diisi"} />
-            <Row label="Mata pelajaran" value="Matematika SD" />
-            <Row label="Zona waktu" value={p?.timezone ?? "Asia/Jakarta"} />
-          </dl>
+          {!isDemo && p ? (
+            <ProfileForm displayName={p.displayName} schoolName={p.schoolName} timezone={p.timezone} />
+          ) : (
+            <dl>
+              <Row label="Nama panggilan" value={p?.displayName ?? "–"} />
+              <Row label="Nama sekolah" value={p?.schoolName ?? "Belum diisi"} />
+              <Row label="Mata pelajaran" value="Matematika SD" />
+              <Row label="Zona waktu" value={p?.timezone ?? "Asia/Jakarta"} />
+            </dl>
+          )}
         </Card>
 
         <Card aria-labelledby="periode">
-          <CardHeader icon={CalendarRange} title="Periode Akademik" titleId="periode" />
-          {app.activeYear ? (
+          <CardHeader
+            icon={CalendarRange}
+            title="Periode Akademik"
+            titleId="periode"
+            subtitle={app.activeYear ? `Tahun ajaran aktif ${app.activeYear.label}` : undefined}
+          />
+          {!app.activeYear ? (
+            <p className="text-ink-muted">Belum ada tahun ajaran aktif.</p>
+          ) : canEditPeriod ? (
+            <div className="space-y-3">
+              {app.semesters.map((s) => (
+                <SemesterDatesForm
+                  key={s.id}
+                  semesterId={s.id}
+                  title={semesterLabel(s.number)}
+                  isActive={s.id === app.activeSemesterId}
+                  startDate={s.startDate}
+                  endDate={s.endDate}
+                  midtermDate={s.midtermDate}
+                  midtermTerm={`Penanda ${DEFAULT_MIDTERM_TERM}`}
+                />
+              ))}
+            </div>
+          ) : (
             <dl>
               <Row label="Tahun ajaran aktif" value={app.activeYear.label} />
               {app.semesters.map((s) => (
@@ -65,17 +93,19 @@ async function PengaturanContent() {
                 />
               ))}
             </dl>
-          ) : (
-            <p className="text-ink-muted">Belum ada tahun ajaran aktif.</p>
           )}
           <p className="mt-3 text-sm text-ink-muted">
-            {DEFAULT_MIDTERM_TERM} hanya penanda tengah semester — bukan pergantian semester.
+            {DEFAULT_MIDTERM_TERM} hanya penanda tengah semester — bukan pergantian semester. Kosongkan bila tidak dipakai.
           </p>
         </Card>
 
         <Card aria-labelledby="akun">
-          <CardHeader icon={KeyRound} title="Akun" titleId="akun" />
-          <p className="text-ink-muted">Ubah kata sandi dan pengelolaan akun tersedia setelah login Supabase aktif.</p>
+          <CardHeader icon={KeyRound} title="Kata Sandi" titleId="akun" />
+          {isDemo ? (
+            <p className="text-ink-muted">Ubah kata sandi tersedia setelah login Supabase aktif.</p>
+          ) : (
+            <NewPasswordForm />
+          )}
         </Card>
       </div>
     </>

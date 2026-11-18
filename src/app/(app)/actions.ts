@@ -3,7 +3,7 @@
 import { refresh } from "next/cache";
 import { cookies } from "next/headers";
 import { z } from "zod";
-import { getRepository } from "@/lib/data";
+import { getDataAccess } from "@/lib/data";
 import { PERIOD_COOKIE } from "@/lib/server/request-context";
 import { resolveAppContext } from "@/lib/services/app-context";
 
@@ -22,7 +22,9 @@ export async function selectSemester(semesterId: string): Promise<SelectSemester
   if (!parsed.success) return { ok: false, message: "Pilihan periode tidak valid." };
 
   // Validasi di server: semester harus milik tahun ajaran aktif guru ini.
-  const ctx = await resolveAppContext(getRepository(), { requestedSemesterId: parsed.data });
+  const access = await getDataAccess();
+  if (!access.repo) return { ok: false, message: "Sesi Anda sudah berakhir. Silakan masuk lagi." };
+  const ctx = await resolveAppContext(access.repo, { requestedSemesterId: parsed.data });
   if (ctx.selectedSemester?.id !== parsed.data) {
     return { ok: false, message: "Periode tidak ditemukan." };
   }

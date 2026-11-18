@@ -84,6 +84,7 @@ function cls(yearId: string, idPrefix: string, grade: GradeLevel, section: strin
     gradeLevel: grade,
     section,
     displayName: `${grade}${section}`,
+    archivedAt: null,
   };
 }
 
@@ -414,6 +415,7 @@ const demoProfile: Profile = {
   displayName: "Bu Sari",
   schoolName: "SD Contoh Rivora",
   timezone: "Asia/Jakarta",
+  onboardedAt: "2026-07-08T08:00:00+07:00",
 };
 
 export function buildDemoDataset(scenario: DemoScenario = "lengkap"): DemoDataset {
