@@ -28,7 +28,7 @@ Audit awal: 18 November 2026, `main` = `c35df4f` (Fase A, Fase B, Bank Materi un
 
 | # | Pekerjaan | Status | Catatan audit |
 |---|---|---|---|
-| 09 | Pergantian tahun ajaran | Sudah dibuat, belum teruji | Arsip → Mulai Tahun Ajaran Baru (RPC satu transaksi: tahun lama diarsipkan, tahun baru + 2 semester). PGlite ✅; migration `20261119200000` menunggu persetujuan |
+| 09 | Pergantian tahun ajaran | Sudah dibuat, belum teruji | Arsip → Mulai Tahun Ajaran Baru (RPC satu transaksi: tahun lama diarsipkan, tahun baru + 2 semester). PGlite ✅; migration `20261119200000` sudah di Cloud |
 | 10 | Sebelum/sesudah UTS/PTS | Sudah dibuat, belum teruji | Tanggal UTS/PTS bisa diatur di Pengaturan (Fase B); pengelompokan rencana menyusul di Tahap 1 (#01) |
 | 11 | Arsip tahun ajaran lengkap | Sudah dibuat, belum teruji | Kelas (termasuk yang diarsipkan), jadwal, rencana, catatan, progres tetap utuh & baca-saja; tidak ada data/file yang dihapus |
 | 12 | Detail dan pencarian arsip | Sudah dibuat, belum teruji | Cari tahun/kelas; `/arsip/[tahun]`: filter semester & kelas, cari topik/catatan, progres lama, rencana + file, riwayat. Ekspor menyusul (#19) |
@@ -60,4 +60,4 @@ Audit awal: 18 November 2026, `main` = `c35df4f` (Fase A, Fase B, Bank Materi un
 
 - 18 Nov 2026 — audit awal; Tahap 1 dimulai di branch `feature/tahap-1-mengajar`.
 - 18 Nov 2026 — Tahap 1 (#01–#08) dibuat; migration `20261119100000_fase_c_mengajar` menunggu persetujuan untuk Supabase Cloud.
-- 19 Nov 2026 — Migration Tahap 1 terverifikasi ada di Cloud (tabel ada, anon ditolak); PR #6 di `main`. Tahap 2 (#09–#15) dibuat di `feature/tahap-2-arsip`; migration `20261119200000_fase_d_tahun_ajaran` menunggu persetujuan.
+- 19 Nov 2026 — Migration Tahap 1 terverifikasi ada di Cloud (tabel ada, anon ditolak); PR #6 di `main`. Tahap 2 (#09–#15) dibuat di `feature/tahap-2-arsip`; migration `20261119200000_fase_d_tahun_ajaran` diterapkan ke Cloud (disetujui pemilik) dan terverifikasi.

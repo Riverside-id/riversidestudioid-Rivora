@@ -13,7 +13,9 @@ Catatan jujur per lingkungan. "Lulus di PGlite" **bukan** berarti lulus di Supab
 | Menu bisa digulir di layar pendek (1280×450, 740×360) | lokal, browser | manual (JS: overflow & posisi menu) | ✅ |
 | Arsip: Mulai Tahun Ajaran Baru + dialog konfirmasi, detail arsip dengan filter | lokal, browser (data contoh) | manual | ✅ |
 | **Migration Tahap 1 `20261119100000`** | **Supabase Cloud** | REST `GET /rest/v1/meeting_records` → `42501` | ✅ tabel ada, anon ditolak |
-| **Migration `20261119200000_fase_d_tahun_ajaran`** | **Supabase Cloud** | SQL Editor | ⏳ menunggu persetujuan |
+| **Migration `20261119200000_fase_d_tahun_ajaran`** (disetujui pemilik) | **Supabase Cloud** | SQL Editor + cek kondisi | ✅ 19 Nov 2026: 2 RPC ada, 8 versi riwayat, 28 policy, anon tanpa hak |
+| RPC tidak bisa dipanggil pengunjung tanpa login | **Supabase Cloud** | `POST /rest/v1/rpc/start_new_academic_year`, `activate_archived_year` | ✅ `42501 permission denied` |
+| Alur nyata: Mulai Tahun Ajaran Baru, Pulihkan, Materi/Kelas Diarsipkan | Vercel Preview + Cloud | manual oleh pemilik | ⏳ belum dicoba |
 
 ## Tahap 1 Fitur Mengajar (#01–#08) — 18 November 2026
 
