@@ -29,7 +29,7 @@ export class DemoReadOnlyError extends DataError {
   }
 }
 
-const RIVORA_CODES = new Set(["RV001", "RV002", "RV003", "RV004", "RV005", "RV006"]);
+const RIVORA_CODES = new Set(["RV001", "RV002", "RV003", "RV004", "RV005", "RV006", "RV007"]);
 
 export function dbErrorMessage(error: DbErrorLike): string {
   const text = `${error.message ?? ""} ${error.details ?? ""}`;
@@ -47,7 +47,7 @@ export function dbErrorMessage(error: DbErrorLike): string {
     return "Hanya boleh ada satu tahun ajaran aktif.";
   }
   if (text.includes("academic_years_owner_label_key")) {
-    return "Tahun ajaran dengan label ini sudah ada.";
+    return "Tahun ajaran dengan label ini sudah ada. Pilih label lain atau pulihkan dari Arsip.";
   }
   if (text.includes("weekly_schedules_time_order")) return "Jam selesai harus setelah jam mulai.";
   if (text.includes("semesters_midterm_inside")) return "Tanggal UTS/PTS harus berada di dalam semester.";
