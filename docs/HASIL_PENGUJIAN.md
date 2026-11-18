@@ -13,7 +13,11 @@ Catatan jujur per lingkungan. "Lulus di PGlite" **bukan** berarti lulus di Supab
 | Transisi Cloud: materi batas 10 MB → tanpa batas (`--since 20261118210000`) | PGlite | `tests/db/sql-editor-bundle.test.ts` | ✅ |
 | **Migration `20261118210000_materi_tanpa_batas_ukuran`** (disetujui pemilik) | **Supabase Cloud** | SQL Editor + `supabase/checks/cek_kondisi.sql` | ✅ 18 Nov 2026: bucket `materi` privat tanpa batas sendiri, 5 tipe file, 3 policy; 6 versi riwayat migration; 20 policy public; anon tanpa hak |
 | Tampilan Materi (kartu, Unduh/Buka PDF, form unggah desktop & ponsel, pesan mode demo) | lokal, browser | manual | ✅ desain Fase A dipertahankan |
-| **Storage asli**: unggah via signed URL, buka via signed URL, guru B & anon ditolak, bucket tolak tipe lain, file 11 MB diterima, arsip menjaga file | **Supabase Cloud** | `tests/integration/supabase-storage.test.ts` | ⏳ **belum** — menunggu persetujuan migration + secret key |
+| **Migration `20261118200000_fase_c_materi` diterapkan** (disetujui pemilik) | **Supabase Cloud** | `npm run db:bundle -- --since 20261118200000` lewat SQL Editor | ✅ 18 Nov 2026 |
+| Tabel materi ada & anon ditolak lewat REST; bucket `materi` merespons | **Supabase Cloud** | `GET /rest/v1/teaching_materials` → `42501` (tabel fiktif → `PGRST205`) | ✅ |
+| **Storage asli**: unggah via signed URL, buka via signed URL, guru B & anon ditolak, bucket tolak tipe lain, file 11 MB diterima, arsip menjaga file | **Supabase Cloud** | `tests/integration/supabase-storage.test.ts` | ⏳ **belum** — menunggu secret key di `.env.test.local` |
+| Production `main` `b995e0a` berisi Bank Materi (route `/materi/[id]/berkas` di build) | Vercel production | `vercel inspect --logs`, curl | ✅ halaman materi meminta login bila belum masuk |
+| Unggah dari browser di production | Vercel + Supabase Cloud | manual oleh pemilik | ⏳ belum dicoba |
 
 ## Fase B — status per 18 November 2026
 
@@ -41,7 +45,7 @@ Catatan jujur per lingkungan. "Lulus di PGlite" **bukan** berarti lulus di Supab
 | Cek | Hasil |
 |---|---|
 | Env **Preview** (`RIVORA_DATA_SOURCE=supabase`, URL + publishable key Supabase) | ✅ diisi; Preview `rivora-hcystix4p` dideploy ulang & Ready (dilindungi Vercel Authentication) |
-| Deployment production `rivora-fi78zx991` (13.26 WIB, dipromosikan dari Preview Fase B lewat dashboard) | ⚠️ kode Fase B **tanpa env Production** → mode demo ditolak → "Halaman belum bisa dimuat" |
+| Deployment production `rivora-fi78zx991` (13.26 WIB, hasil merge PR #1 ke `main`) | ⚠️ kode Fase B **tanpa env Production** → mode demo ditolak → "Halaman belum bisa dimuat" |
 | Env **Production** (`RIVORA_DATA_SOURCE=supabase`, URL + publishable key, `NEXT_PUBLIC_SITE_URL`) | ✅ diisi dengan izin pemilik |
 | Redeploy production `rivora-5d783nzju` → `https://rivora-rust.vercel.app` | ✅ Ready |
 | `/`, `/login`, `/register`, `/forgot-password`, `/reset-password` | ✅ 200, desain Fase A, tanpa banner "Data demo" |
