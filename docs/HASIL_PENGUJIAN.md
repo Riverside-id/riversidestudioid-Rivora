@@ -12,7 +12,8 @@ Catatan jujur per lingkungan. "Lulus di PGlite" **bukan** berarti lulus di Supab
 | Laporan dari repository (total konsisten, ≤ 100%, filter kelas/tanggal, semua semester), CSV BOM/`;`/CSV-injection | lokal | `src/lib/__tests__/report.test.ts` | ✅ 5 test |
 | Halaman laporan & unduh CSV (header, BOM, nama file) | lokal, dev server (data contoh) | manual + curl | ✅ |
 | Cetak/Simpan PDF | browser | manual | ⏳ belum dicoba di dialog cetak |
-| **Migration `20261119300000_materi_catatan_tautan`** | **Supabase Cloud** | SQL Editor | ⏳ menunggu persetujuan |
+| **Migration `20261119300000_materi_catatan_tautan`** (disetujui pemilik) | **Supabase Cloud** | SQL Editor | ✅ 19 Nov 2026: kolom `note_body` ada (REST: `42501` vs kolom fiktif `42703`); pemilik mengonfirmasi menyimpan materi berhasil |
+| Production `main` `9518bd1` berisi `/progres/laporan`, `/progres/laporan/csv`, `/materi/[id]` | Vercel production | `vercel inspect --logs`, curl | ✅ meminta login bila belum masuk |
 | #16 unggah PDF/DOC/DOCX/PPT/PPTX asli di Cloud | **Supabase Cloud** | `tests/integration/supabase-storage.test.ts` | ⏳ menunggu secret key |
 
 ## Tahap 2 Tahun Ajaran & Arsip (#09–#15) — 19 November 2026
